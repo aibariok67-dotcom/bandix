@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1609 IELTS — прототип платформы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#0A0C10;
+    --panel:#12141C;
+    --panel-2:#171A24;
+    --border:#1E2230;
+    --accent:#4F46E5;
+    --accent-2:#3B82F6;
+    --accent-soft:rgba(79,70,229,0.16);
+    --success:#22C55E;
+    --success-soft:rgba(34,197,94,0.12);
+    --danger:#EF4444;
+    --warning:#F59E0B;
+    --text:#E9EBF2;
+    --text-muted:#8891A6;
+    --text-dim:#565E72;
+    --r-lg:20px;
+    --r-md:14px;
+    --r-sm:10px;
+    --font-display:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);}
+  body{font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4,.font-display{font-family:var(--font-display);}
+  button{font-family:inherit;cursor:pointer;}
+  a{color:inherit;}
+  ::selection{background:var(--accent-soft);}
+  .hidden{display:none !important;}
+
+  .app{display:flex;min-height:100vh;}
+
+  /* SIDEBAR */
+  .sidebar{
+    width:240px;flex:none;border-right:1px solid var(--border);
+    background:var(--panel);display:flex;flex-direction:column;
+    position:sticky;top:0;height:100vh;padding:22px 14px;
+  }
+  .brand{font-family:var(--font-display);font-weight:800;font-size:19px;letter-spacing:-0.02em;padding:6px 10px 26px;}
+  .brand span{color:var(--accent-2);}
+  .nav-item{
+    display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;
+    color:var(--text-muted);font-weight:600;font-size:14px;margin-bottom:2px;
+    border:1px solid transparent;transition:background .15s,color .15s;
+  }
+  .nav-item svg{flex:none;}
+  .nav-item:hover{background:var(--panel-2);color:var(--text);}
+  .nav-item.active{background:var(--accent-soft);color:var(--accent-2);border-color:rgba(79,70,229,0.35);}
+  .sidebar-foot{margin-top:auto;padding:12px 10px;font-size:12px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:14px;}
+
+  /* BOTTOM NAV (mobile) */
+  .bottomnav{
+    display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
+    background:rgba(10,12,16,0.95);backdrop-filter:blur(10px);
+    border-top:1px solid var(--border);padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    justify-content:space-around;
+  }
+  .bottomnav .nav-item{flex-direction:column;gap:3px;font-size:10.5px;padding:6px 4px;border-radius:10px;text-align:center;}
+
+  /* MAIN */
+  .content{flex:1;min-width:0;padding:28px 32px 90px;max-width:1040px;}
+  .tab{display:none;}
+  .tab.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .page-head{margin-bottom:22px;}
+  .page-head h1{font-size:22px;font-weight:800;margin:0 0 4px;letter-spacing:-0.01em;}
+  .page-head p{margin:0;color:var(--text-muted);font-size:13.5px;}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+    color:var(--accent-2);background:var(--accent-soft);border:1px solid rgba(79,70,229,0.3);
+    padding:5px 10px;border-radius:999px;margin-bottom:16px;
+  }
+  .badge.dim{color:var(--text-muted);background:var(--panel-2);border-color:var(--border);}
+
+  .grid{display:grid;gap:14px;}
+  .grid.cols-2{grid-template-columns:1fr 1fr;}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols-4{grid-template-columns:repeat(4,1fr);}
+  @media (max-width:760px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr 1fr;}}
+
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);
+    padding:18px 20px;
+  }
+  .card.tight{padding:14px 16px;}
+
+  /* DASHBOARD */
+  .hero-score{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .hero-score .num{font-family:var(--font-display);font-weight:800;font-size:52px;line-height:1;letter-spacing:-0.02em;}
+  .hero-score .num small{font-size:18px;color:var(--text-muted);font-weight:600;}
+  .hero-score .target{text-align:right;}
+  .hero-score .target .lbl{font-size:12px;color:var(--text-muted);margin-bottom:2px;}
+  .hero-score .target .val{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--accent-2);}
+  .track{position:relative;height:8px;border-radius:999px;background:var(--panel-2);margin-top:16px;overflow:visible;}
+  .track .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));}
+  .track .marker{position:absolute;top:-5px;width:2px;height:18px;background:var(--text-dim);}
+  .track .marker::after{content:attr(data-label);position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--text-dim);white-space:nowrap;}
+
+  .stat-row{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap;}
+  .stat-pill{flex:1;min-width:120px;background:var(--panel-2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;}
+  .stat-pill .lbl{font-size:11.5px;color:var(--text-muted);margin-bottom:4px;}
+  .stat-pill .val{font-family:var(--font-display);font-weight:700;font-size:19px;}
+
+  .skill-row{display:flex;align-items:center;gap:12px;padding:9px 0;}
+  .skill-row .name{width:92px;flex:none;font-size:13px;color:var(--text-muted);font-weight:600;}
+  .skill-row .bar{flex:1;height:8px;border-radius:999px;background:var(--panel-2);overflow:hidden;}
+  .skill-row .bar span{display:block;height:100%;border-radius:999px;background:var(--accent-2);}
+  .skill-row .band{width:34px;text-align:right;font-weight:700;font-size:13px;font-family:var(--font-display);}
+
+  .heat-row{display:flex;gap:6px;margin-top:14px;}
+  .heat-cell{flex:1;aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--text-dim);font-weight:600;}
+
+  /* QUESTION BANK */
+  .type-card{display:flex;flex-direction:column;gap:10px;}
+  .type-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .type-card h3{margin:0;font-size:15px;font-weight:700;}
+  .type-card .meta{font-size:12px;color:var(--text-muted);}
+  .acc-bar{height:6px;border-radius:999px;background:var(--panel-2);overflow:hidden;}
+  .acc-bar span{display:block;height:100%;background:var(--warning);}
+  .acc-bar span.good{background:var(--success);}
+  .btn{border:none;border-radius:12px;padding:10px 16px;font-weight:600;font-size:13.5px;transition:transform .1s,background .15s;}
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:#433cd6;}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+  .btn-ghost:hover{background:var(--panel-2);}
+  .btn-disabled{background:var(--panel-2);color:var(--text-dim);cursor:not-allowed;}
+  .btn.wide{width:100%;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .chip{font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:999px;background:var(--panel-2);border:1px solid var(--border);color:var(--text-muted);}
+
+  /* PRACTICE */
+  .test-card{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
+  .test-card .info h3{margin:0 0 4px;font-size:15.5px;font-weight:700;}
+  .test-card .info .meta{font-size:12.5px;color:var(--text-muted);}
+  .test-card .actions{display:flex;gap:8px;}
+  .soon-tag{font-size:10.5px;font-weight:700;color:var(--text-dim);background:var(--panel-2);border:1px solid var(--border);padding:3px 8px;border-radius:999px;}
+
+  .quiz-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:820px){.quiz-layout{grid-template-columns:1fr;}}
+  .passage-box{max-height:520px;overflow-y:auto;}
+  .passage-box h3{margin-top:0;}
+  .passage-box p{color:#C7CBD9;font-size:14px;line-height:1.75;}
+  .quiz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .timer{font-family:var(--font-display);font-weight:700;font-size:15px;background:var(--panel-2);border:1px solid var(--border);padding:6px 14px;border-radius:999px;}
+  .timer.low{color:var(--danger);border-color:rgba(239,68,68,0.4);}
+  .q-block{padding:16px 0;border-bottom:1px solid var(--border);}
+  .q-block:last-child{border-bottom:none;}
+  .q-num{font-size:11.5px;color:var(--text-dim);font-weight:700;margin-bottom:6px;letter-spacing:.02em;}
+  .q-text{font-size:14.5px;font-weight:600;margin-bottom:10px;}
+  .opt{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:7px;font-size:13.5px;color:var(--text-muted);transition:border-color .12s,color .12s;}
+  .opt:hover{border-color:var(--accent-2);color:var(--text);}
+  .opt input{accent-color:var(--accent);}
+  .opt.selected{border-color:var(--accent-2);color:var(--text);background:var(--accent-soft);}
+
+  /* Supabase-driven practice additions */
+  .state-msg{color:var(--text-muted);font-size:13.5px;text-align:center;padding:26px 10px;}
+  .state-msg.err{color:var(--danger);}
+  .part-head{margin:6px 0 0;padding:12px 0 4px;border-top:1px solid var(--border);}
+  .part-head:first-child{border-top:none;padding-top:0;}
+  .part-head h4{margin:0;font-size:14px;font-weight:800;color:var(--accent-2);}
+  .part-head p{margin:2px 0 0;font-size:12.5px;color:var(--text-muted);}
+  .group-head{margin:14px 0 2px;padding:10px 12px;border-radius:var(--r-sm);background:var(--panel-2);border:1px solid var(--border);font-size:12.5px;color:var(--text-muted);}
+  .group-head b{color:var(--text);}
+  .part-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .part-tab{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:12px;border:1px solid var(--border);background:var(--panel);color:var(--text-muted);font-weight:700;font-size:13.5px;font-family:var(--font-display);transition:background .15s,color .15s,border-color .15s;}
+  .part-tab:hover{background:var(--panel-2);color:var(--text);}
+  .part-tab.active{background:var(--accent-soft);color:var(--accent-2);border-color:rgba(79,70,229,0.35);}
+  .part-tab small{font-family:var(--font-body);font-weight:600;font-size:11px;color:var(--text-dim);}
+  .part-tab.active small{color:var(--accent-2);}
+  .locked-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--warning);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);padding:3px 9px;border-radius:999px;margin-top:4px;}
+  .locked-extra{font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:6px;}
+  .passage-box .p-title{font-size:15px;font-weight:800;margin:18px 0 8px;}
+  .passage-box .p-title:first-of-type{margin-top:0;}
+
+  .results-hero{text-align:center;padding:26px 20px;}
+  .results-hero .band-num{font-family:var(--font-display);font-weight:800;font-size:64px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;}
+  .results-hero .band-lbl{color:var(--text-muted);font-size:13px;margin-top:6px;}
+  .review-row{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .review-row:last-child{border-bottom:none;}
+  .review-icon{flex:none;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .review-icon.ok{background:var(--success-soft);color:var(--success);}
+  .review-icon.bad{background:rgba(239,68,68,0.12);color:var(--danger);}
+  .review-text .yours{color:var(--text-muted);}
+  .review-text .correct{color:var(--success);}
+
+  /* AI PLAN */
+  .plan-item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);}
+  .plan-item:last-child{border-bottom:none;}
+  .plan-day{width:44px;flex:none;font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text-muted);padding-top:2px;}
+  .plan-item h4{margin:0 0 3px;font-size:14px;font-weight:700;}
+  .plan-item p{margin:0;font-size:12.5px;color:var(--text-muted);}
+  .ai-note{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);border:1px solid rgba(79,70,229,0.3);border-radius:var(--r-md);padding:14px 16px;font-size:13.5px;color:#C9CCFB;margin-bottom:18px;}
+
+  /* VOCAB */
+  .flash-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:10px 0 4px;}
+  .flashcard{width:100%;max-width:420px;height:220px;perspective:1200px;}
+  .flashcard-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d;cursor:pointer;}
+  .flashcard-inner.flipped{transform:rotateY(180deg);}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;}
+  .face.back{transform:rotateY(180deg);background:var(--panel-2);}
+  .face .word{font-family:var(--font-display);font-weight:800;font-size:26px;}
+  .face .pos{color:var(--text-dim);font-size:12px;margin-top:4px;}
+  .face .hint{color:var(--text-dim);font-size:11.5px;margin-top:14px;}
+  .face .def{font-size:14px;color:var(--text);margin-bottom:8px;}
+  .face .ru{color:var(--accent-2);font-weight:700;font-size:15px;margin-bottom:10px;}
+  .face .ex{color:var(--text-muted);font-size:12.5px;font-style:italic;}
+  .flash-controls{display:flex;gap:10px;align-items:center;}
+  .flash-counter{font-size:12.5px;color:var(--text-muted);font-weight:600;}
+
+  .footnote{margin-top:30px;font-size:11.5px;color:var(--text-dim);text-align:center;}
+
+  @media (max-width:900px){
+    .sidebar{display:none;}
+    .bottomnav{display:flex;}
+    .content{padding:20px 16px 96px;}
+    .hero-score .num{font-size:40px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="content">
+
+    <!-- DASHBOARD -->
+    <section class="tab active" id="tab-dashboard">
+      <div class="page-head">
+        <span class="badge">🇰🇿 Демо-прототип · для локального IELTS-рынка</span>
+        <h1>С возвращением, Айгерим 👋</h1>
+        <p>Вот как проходит подготовка к экзамену на этой неделе.</p>
+      </div>
+
+      <div class="grid cols-2" style="align-items:stretch;margin-bottom:14px;">
+        <div class="card">
+          <div class="hero-score">
+            <div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Текущий балл (оценочно)</div>
+              <div class="num">6.0<small> Band</small></div>
+            </div>
+            <div class="target">
+              <div class="lbl">Цель</div>
+              <div class="val">7.5 Band</div>
+            </div>
+          </div>
+          <div class="track">
+            <div class="fill" style="width:66%"></div>
+            <div class="marker" style="left:83%" data-label="цель"></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-pill"><div class="lbl">Дней до экзамена</div><div class="val">45</div></div>
+            <div class="stat-pill"><div class="lbl">Серия дней</div><div class="val">4 🔥</div></div>
+            <div class="stat-pill"><div class="lbl">Точность</div><div class="val">71%</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 12px;font-size:14px;">Баллы по навыкам</h3>
+          <div class="skill-row"><div class="name">Reading</div><div class="bar"><span style="width:72%"></span></div><div class="band">6.5</div></div>
+          <div class="skill-row"><div class="name">Listening</div><div class="bar"><span style="width:67%"></span></div><div class="band">6.0</div></div>
+          <div class="skill-row"><div class="name">Writing</div><div class="bar"><span style="width:61%"></span></div><div class="band">5.5</div></div>
+          <div class="skill-row"><div class="name">Speaking</div><div class="bar"><span style="width:67%"></span></div><div class="band">6.0</div></div>
+          <h3 style="margin:16px 0 4px;font-size:14px;">Активность за неделю</h3>
+          <div class="heat-row" id="heatmap"></div>
+        </div>
+      </div>
+
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+        <div>
+          <h3 style="margin:0 0 4px;font-size:15px;">Продолжить подготовку</h3>
+          <p style="margin:0;color:var(--text-muted);font-size:13px;">Reading · демо-тест «Vertical Farming» · 8 вопросов · ~12 мин</p>
+        </div>
+        <button class="btn btn-primary" onclick="goToFullTest()">Начать тест →</button>
+      </div>
+    </section>
+
+    <!-- QUESTION BANK -->
+    <section class="tab" id="tab-bank">
+      <div class="page-head">
+        <h1>Банк заданий</h1>
+        <p>Вопросы сгруппированы по типу, а не по тесту целиком — удобно закрывать слабые места точечно.</p>
+      </div>
+      <div class="chip-row">
+        <span class="chip" style="background:var(--accent-soft);border-color:rgba(79,70,229,.35);color:var(--accent-2);">Все</span>
+        <span class="chip">Reading</span>
+        <span class="chip">Listening</span>
+      </div>
+      <div class="grid cols-2" id="bank-grid"></div>
+      <p class="footnote">В демо доступно ограниченное число вопросов на тип. В полной версии — сотни вопросов на категорию, как в базе Engnovate.</p>
+    </section>
+
+    <!-- PRACTICE / MOCK TESTS -->
+    <section class="tab" id="tab-practice">
+      <div id="practice-list">
+        <div class="page-head">
+          <h1>Пробные тесты</h1>
+          <p>Полный формат экзамена с таймером — как настоящий компьютерный IELTS.</p>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr;">
+          <!-- Populated from Supabase (table: tests) -->
+          <div id="db-tests" style="display:grid;gap:14px;grid-template-columns:1fr;">
+            <div class="card state-msg">Загружаем тесты…</div>
+          </div>
+          <div class="card test-card">
+            <div class="info">
+              <h3>Cambridge-style Academic Mock 1</h3>
+              <div class="meta">Full Mock · 4 части · 2ч 40м</div>
+            </div>
+            <div class="actions"><span class="soon-tag">Скоро</span></div>
+          </div>
+          <div class="card test-card">
+            <div class="info">
+              <h3>Listening · Section 2: Map Labelling</h3>
+              <div class="meta">Listening · требует аудио-контент</div>
+            </div>
+            <div class="actions"><span class="soon-tag">Скоро</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="practice-quiz" class="hidden">
+        <div class="quiz-head">
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;" id="quiz-title">Reading Practice</div>
+            <h2 style="margin:0;font-size:18px;" id="quiz-heading">Vertical Farming</h2>
+          </div>
+          <div class="timer" id="timer">12:00</div>
+        </div>
+        <div class="part-tabs hidden" id="part-tabs"></div>
+        <div class="quiz-layout">
+          <div class="card passage-box" id="passage-box">
+            <h3>Reading Passage</h3>
+            <p><b>Vertical farming</b> — the practice of growing crops in stacked layers within controlled indoor environments — has moved from a futuristic concept to a growing industry over the past decade. Proponents argue that by building upward rather than outward, cities can produce fresh produce with a fraction of the land traditionally required. In Singapore, where arable land is scarce, several vertical farms now supply supermarkets with leafy greens grown just kilometres from where they are sold, cutting transport time and reducing spoilage.</p>
+            <p>Water efficiency is often cited as one of the technology's clearest advantages: hydroponic and aeroponic systems can use up to ninety percent less water than open-field agriculture, since moisture is recirculated rather than lost to evaporation or runoff. However, the energy required to power artificial lighting and climate control remains a significant obstacle. Unlike traditional farms that rely on sunlight, vertical farms depend heavily on electricity, and in regions where that electricity comes from fossil fuels, the environmental benefits can be partially offset.</p>
+            <p>Despite these challenges, investment in the sector continues to grow, driven partly by concerns over food security in densely populated regions and partly by advances in LED technology that have lowered energy costs. Whether vertical farming can scale to feed entire cities, rather than supplement existing food systems, remains an open question among agricultural economists.</p>
+          </div>
+          <div class="card" id="quiz-questions" style="max-height:520px;overflow-y:auto;"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+          <button class="btn btn-ghost" onclick="exitQuiz()">Отмена</button>
+          <button class="btn btn-primary" onclick="submitQuiz()">Завершить тест</button>
+        </div>
+      </div>
+
+      <div id="practice-results" class="hidden"></div>
+    </section>
+
+    <!-- AI STUDY PLAN -->
+    <section class="tab" id="tab-ai">
+      <div class="page-head">
+        <h1>AI-план подготовки</h1>
+        <p>Составляется на основе результатов ваших тестов.</p>
+      </div>
+      <div class="ai-note">
+        <div>🤖</div>
+        <div>Ваш последний прогон показывает точность 42% в заданиях True / False / Not Given — это сейчас самое слабое место. План на неделю выстроен вокруг этого раздела, с постепенным добавлением Writing.</div>
+      </div>
+      <div class="card">
+        <div class="plan-item"><div class="plan-day">Пн</div><div><h4>True / False / Not Given — фокус-тренировка</h4><p>10 вопросов из банка заданий, разбор ошибок после каждого</p></div></div>
+        <div class="plan-item"><div class="plan-day">Вт</div><div><h4>Reading: Vertical Farming (полный тест)</h4><p>8 вопросов, таймер 12 минут — тренировка темпа</p></div></div>
+        <div class="plan-item"><div class="plan-day">Ср</div><div><h4>Writing Task 2 + AI-фидбек</h4><p>Проверка по критериям IELTS: Task Response, Coherence, Lexical Resource, Grammar</p></div></div>
+        <div class="plan-item"><div class="plan-day">Чт</div><div><h4>Listening Section 2: Map Labelling</h4><p>Появится после подключения аудио-базы</p></div></div>
+      </div>
+      <p class="footnote">В прототипе план статичный. В реальной версии его будет генерировать LLM на основе истории ответов пользователя.</p>
+    </section>
+
+    <!-- VOCAB BLITZ -->
+    <section class="tab" id="tab-vocab">
+      <div class="page-head">
+        <h1>Vocab Blitz</h1>
+        <p>Академическая лексика из текстов — с переводом на русский.</p>
+      </div>
+      <div class="flash-wrap">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+          <div class="flashcard-inner" id="flashcard-inner">
+            <div class="face front">
+              <div class="word" id="fc-word"></div>
+              <div class="pos" id="fc-pos"></div>
+              <div class="hint">нажмите, чтобы перевернуть</div>
+            </div>
+            <div class="face back">
+              <div class="def" id="fc-def"></div>
+              <div class="ru" id="fc-ru"></div>
+              <div class="ex" id="fc-ex"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flash-controls">
+          <button class="btn btn-ghost" onclick="prevCard()">← Назад</button>
+          <span class="flash-counter" id="fc-counter">1 / 8</span>
+          <button class="btn btn-ghost" onclick="nextCard()">Дальше →</button>
+        </div>
+      </div>
+    </section>
+
+    <p class="footnote">Прототип для демонстрации механики и дизайна. Учебные материалы сгенерированы для показа, не взяты из Cambridge или Engnovate.</p>
+  </main>
+</div>
+
+<nav class="bottomnav" id="bottomnav"></nav>
+
+<script>
+/* ---------- SUPABASE CONFIG (public anon key — safe for frontend) ---------- */
+const SUPABASE_URL = 'https://msnnapbzvpzmseuacjzy.supabase.co';   // ← вставь свой Project URL
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbm5hcGJ6dnB6bXNldWFjanp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTU4NzQsImV4cCI6MjEwNTk5MTg3NH0.A3ok6LE2TSD_p-X6G7X1htCHOE5Q2fbw6nnuOPj2TNU';               // ← вставь свой anon public key
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------- NAV ---------- */
+const NAV = [
+  {id:'dashboard', label:'Главная', icon:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'},
+  {id:'bank', label:'Банк заданий', icon:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v18h4.5a2.5 2.5 0 0 0 2.5-2.5z"/>'},
+  {id:'ai', label:'AI-план', icon:'<rect x="5" y="8" width="14" height="10" rx="3"/><circle cx="9.5" cy="13" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.2" fill="currentColor" stroke="none"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1" fill="currentColor" stroke="none"/>'},
+  {id:'practice', label:'Тесты', icon:'<path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>'},
+  {id:'vocab', label:'Blitz', icon:'<path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="currentColor" stroke="none"/>'},
+];
+function iconSvg(d){return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;}
+function renderNav(){
+  const side = document.getElementById('sidebar');
+  const bottom = document.getElementById('bottombav') || document.getElementById('bottomnav');
+  side.innerHTML = `<div class="brand">1609<span>IELTS</span></div>` +
+    NAV.map(n=>`<div class="nav-item" data-tab="${n.id}" onclick="switchTab('${n.id}')">${iconSvg(n.icon)}<span>${n.label}</span></div>`).join('') +
+    `<div class="sidebar-foot">Прототип v0.1 · демо-данные</div>`;
+  bottom.innerHTML = NAV.map(n=>`<div class="nav-item" data-tab="${n.id}" onclick="switchTab('${n.id}')">${iconSvg(n.icon)}<span>${n.label}</span></div>`).join('');
+}
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active', el.dataset.tab===tab));
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function goToFullTest(){ switchTab('practice'); startQuiz('full', null); }
+
+/* ---------- HEATMAP ---------- */
+const heat = [2,3,1,4,0,3,2];
+const days = ['П','В','С','Ч','П','С','В'];
+document.getElementById('heatmap').innerHTML = heat.map((v,i)=>{
+  const alpha = 0.12 + v*0.2;
+  return `<div class="heat-cell" style="background:rgba(79,70,229,${alpha})">${days[i]}</div>`;
+}).join('');
+
+/* ---------- QUESTION POOL ---------- */
+const POOL = [
+  {id:1, type:'tfng', text:'Vertical farming requires more land than traditional farming methods.', options:['True','False','Not Given'], correct:1},
+  {id:2, type:'tfng', text:'Vertical farms in Singapore sell their produce internationally.', options:['True','False','Not Given'], correct:2},
+  {id:3, type:'tfng', text:'Hydroponic systems can reduce water use by up to ninety percent compared with open-field farming.', options:['True','False','Not Given'], correct:0},
+  {id:6, type:'tfng', text:"Falling costs of LED technology are mentioned as one reason for continued investment in vertical farming.", options:['True','False','Not Given'], correct:0},
+  {id:4, type:'mc', text:'According to the passage, what is the main obstacle facing vertical farming?', options:['Lack of investment','High energy demands for lighting and climate control','Consumer distrust of indoor-grown produce','Shortage of qualified staff'], correct:1},
+  {id:5, type:'mc', text:"What does the passage suggest about vertical farming's ability to replace traditional agriculture entirely?", options:['It has already replaced traditional farming in Singapore','Experts agree it will fully replace traditional farming within a decade','It remains uncertain whether it can scale to that extent','It has been proven impossible'], correct:2},
+  {id:7, type:'mc', text:"The word 'proponents' in paragraph 1 most likely refers to people who —", options:['oppose vertical farming','support and advocate for vertical farming','study plant biology','invest exclusively in real estate'], correct:1},
+  {id:8, type:'mc', text:'Which country is used as an example of vertical farming in the passage?', options:['Japan','Netherlands','Singapore','United States'], correct:2},
+];
+const TYPE_LABEL = {tfng:'True / False / Not Given', mc:'Multiple Choice'};
+
+/* ---------- QUESTION BANK RENDER ---------- */
+const BANK_META = [
+  {type:'tfng', accuracy:42, total:'510+ в полной версии'},
+  {type:'mc', accuracy:68, total:'320+ в полной версии'},
+];
+function renderBank(){
+  const grid = document.getElementById('bank-grid');
+  grid.innerHTML = BANK_META.map(b=>{
+    const count = POOL.filter(q=>q.type===b.type).length;
+    const good = b.accuracy>=60;
+    return `<div class="card type-card">
+      <div class="top">
+        <div><h3>${TYPE_LABEL[b.type]}</h3><div class="meta">${count} вопроса в демо · ${b.total}</div></div>
+        <div style="text-align:right;"><div style="font-family:var(--font-display);font-weight:800;font-size:17px;">${b.accuracy}%</div><div class="meta">точность</div></div>
+      </div>
+      <div class="acc-bar"><span class="${good?'good':''}" style="width:${b.accuracy}%"></span></div>
+      <button class="btn btn-primary wide" onclick="startQuiz('bank','${b.type}')">Тренировать</button>
+    </div>`;
+  }).join('') + `
+    <div class="card type-card" style="opacity:.55;">
+      <div class="top"><div><h3>Matching Headings</h3><div class="meta">Reading</div></div><span class="soon-tag">Скоро</span></div>
+      <div class="acc-bar"><span style="width:0%"></span></div>
+      <button class="btn btn-disabled wide" disabled>Тренировать</button>
+    </div>
+    <div class="card type-card" style="opacity:.55;">
+      <div class="top"><div><h3>Form Completion</h3><div class="meta">Listening</div></div><span class="soon-tag">Скоро</span></div>
+      <div class="acc-bar"><span style="width:0%"></span></div>
+      <button class="btn btn-disabled wide" disabled>Тренировать</button>
+    </div>`;
+}
+
+/* ---------- QUIZ ENGINE ---------- */
+/* Engine is unchanged in behaviour. Small additive hooks for Supabase tests:
+   - optional 3rd arg `custom` ({questions,duration,title,heading,passageHtml})
+   - questions flagged `locked` are rendered as read-only text and excluded from scoring */
+const DEMO_PASSAGE_HTML = document.getElementById('passage-box').innerHTML;
+let quiz = null; // {questions, answers, timeLeft, timerId}
+function startQuiz(mode, filterType, custom){
+  const questions = custom ? custom.questions : (mode==='full' ? POOL : POOL.filter(q=>q.type===filterType));
+  quiz = {questions, answers:{}, timeLeft: custom ? custom.duration : (mode==='full' ? 720 : 300), timerId:null,
+          parts: custom && custom.parts ? custom.parts : null, part: custom && custom.parts ? custom.parts[0].number : null};
+  document.getElementById('quiz-title').textContent = custom ? custom.title : (mode==='full' ? 'Full Reading Test' : 'Practice Section · '+TYPE_LABEL[filterType]);
+  document.getElementById('quiz-heading').textContent = custom ? custom.heading : 'Vertical Farming';
+  document.getElementById('passage-box').innerHTML = quiz.parts ? quiz.parts[0].passageHtml : (custom ? custom.passageHtml : DEMO_PASSAGE_HTML);
+  document.getElementById('practice-list').classList.add('hidden');
+  document.getElementById('practice-results').classList.add('hidden');
+  document.getElementById('practice-quiz').classList.remove('hidden');
+  renderPartTabs();
+  renderQuizQuestions();
+  updateTimerDisplay();
+  quiz.timerId = setInterval(()=>{
+    quiz.timeLeft--;
+    updateTimerDisplay();
+    if(quiz.timeLeft<=0){ clearInterval(quiz.timerId); submitQuiz(); }
+  },1000);
+  switchTab('practice');
+}
+function updateTimerDisplay(){
+  const t = document.getElementById('timer');
+  const m = Math.floor(quiz.timeLeft/60), s = quiz.timeLeft%60;
+  t.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  t.classList.toggle('low', quiz.timeLeft<60);
+}
+/* Part tabs (only for Supabase tests): each tab = one passage + its questions, independent scroll */
+function renderPartTabs(){
+  const el = document.getElementById('part-tabs');
+  if(!quiz.parts){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.classList.remove('hidden');
+  el.innerHTML = quiz.parts.map(p=>{
+    const qs = quiz.questions.filter(q=>q.partNumber===p.number && !q.locked);
+    const done = qs.filter(q=>quiz.answers[q.id]!==undefined).length;
+    return `<button class="part-tab ${p.number===quiz.part?'active':''}" onclick="switchPart(${p.number})">Part ${p.number}${qs.length?` <small>${done}/${qs.length}</small>`:''}</button>`;
+  }).join('');
+}
+function switchPart(n){
+  const p = quiz.parts.find(x=>x.number===n);
+  if(!p) return;
+  quiz.part = n;
+  const pb = document.getElementById('passage-box');
+  pb.innerHTML = p.passageHtml;
+  pb.scrollTop = 0;
+  renderPartTabs();
+  renderQuizQuestions();
+  document.getElementById('quiz-questions').scrollTop = 0;
+}
+function renderQuizQuestions(){
+  const box = document.getElementById('quiz-questions');
+  const list = quiz.parts ? quiz.questions.filter(q=>q.partNumber===quiz.part) : quiz.questions;
+  box.innerHTML = list.map((q,i)=>{
+    const pre = (q.partHeadHtml||'') + (q.groupHeadHtml||'');
+    const num = q.number!==undefined ? q.number : i+1;
+    if(q.locked){
+      return pre + `<div class="q-block">
+        <div class="q-num">ВОПРОС ${num} · ${q.typeLabel}</div>
+        ${q.extraHtml||''}
+        ${q.text?`<div class="q-text">${q.text}</div>`:''}
+        <span class="locked-tag">Интерактивный режим скоро</span>
+      </div>`;
+    }
+    return pre + `
+    <div class="q-block">
+      <div class="q-num">ВОПРОС ${num} · ${q.typeLabel||TYPE_LABEL[q.type]}</div>
+      <div class="q-text">${q.text}</div>
+      ${q.options.map((opt,oi)=>`
+        <label class="opt ${quiz.answers[q.id]===oi?'selected':''}" id="opt-${q.id}-${oi}">
+          <input type="radio" name="q-${q.id}" value="${oi}" ${quiz.answers[q.id]===oi?'checked':''} onchange="selectAnswer(${q.id},${oi})">
+          ${opt}
+        </label>`).join('')}
+    </div>`;
+  }).join('');
+}
+function selectAnswer(qid, oi){
+  quiz.answers[qid]=oi;
+  document.querySelectorAll(`[id^="opt-${qid}-"]`).forEach(el=>el.classList.remove('selected'));
+  document.getElementById(`opt-${qid}-${oi}`).classList.add('selected');
+  if(quiz.parts) renderPartTabs();
+}
+function exitQuiz(){
+  if(quiz && quiz.timerId) clearInterval(quiz.timerId);
+  quiz=null;
+  document.getElementById('practice-quiz').classList.add('hidden');
+  document.getElementById('practice-results').classList.add('hidden');
+  document.getElementById('practice-list').classList.remove('hidden');
+}
+function bandFromPercent(pct){
+  if(pct>=90) return 8.5;
+  if(pct>=80) return 7.5;
+  if(pct>=70) return 7.0;
+  if(pct>=60) return 6.5;
+  if(pct>=50) return 6.0;
+  if(pct>=40) return 5.5;
+  return 5.0;
+}
+function submitQuiz(){
+  if(quiz.timerId) clearInterval(quiz.timerId);
+  const gradable = quiz.questions.filter(q=>!q.locked);
+  const total = gradable.length;
+  let correct = 0;
+  const rows = gradable.map((q,i)=>{
+    const chosen = quiz.answers[q.id];
+    const isCorrect = chosen===q.correct;
+    if(isCorrect) correct++;
+    const yoursText = chosen===undefined ? '— нет ответа —' : q.options[chosen];
+    return `<div class="review-row">
+      <div class="review-icon ${isCorrect?'ok':'bad'}">${isCorrect?'✓':'✕'}</div>
+      <div class="review-text">
+        <div>${q.number!==undefined?q.number:i+1}. ${q.text}</div>
+        <div class="yours">Ваш ответ: ${yoursText}</div>
+        ${!isCorrect?`<div class="correct">Правильный: ${q.options[q.correct]}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  const pct = total ? Math.round((correct/total)*100) : 0;
+  const band = bandFromPercent(pct);
+  const skipped = quiz.questions.length - total;
+  const feedback = pct>=70
+    ? 'Хороший результат — уверенно держите Reading, можно добавить больше Writing-практики.'
+    : 'Основная просадка — задания True/False/Not Given: перечитывайте формулировку внимательно, «Not Given» отличается от «False».';
+
+  document.getElementById('practice-quiz').classList.add('hidden');
+  const res = document.getElementById('practice-results');
+  res.classList.remove('hidden');
+  res.innerHTML = `
+    <div class="card results-hero">
+      <div class="band-num">${band.toFixed(1)}</div>
+      <div class="band-lbl">оценочный Band Score · ${correct} из ${total} верно (${pct}%)${skipped?` · ещё ${skipped} вопр. скоро в интерактивном режиме`:''}</div>
+    </div>
+    <div class="ai-note" style="margin-top:16px;"><div>🤖</div><div>${feedback}</div></div>
+    <div class="card" style="margin-top:14px;">${rows}</div>
+    <div style="display:flex;justify-content:center;margin-top:16px;">
+      <button class="btn btn-primary" onclick="exitQuiz()">Назад к тестам</button>
+    </div>`;
+}
+
+/* ---------- PRACTICE: SUPABASE DATA LAYER ---------- */
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const DB_TYPE_LABEL = {
+  true_false_not_given:'True / False / Not Given', yes_no_not_given:'Yes / No / Not Given',
+  multiple_choice:'Multiple Choice', multiple_select:'Multiple Select',
+  note_completion:'Note Completion', summary_completion:'Summary Completion',
+  sentence_completion:'Sentence Completion', matching_headings:'Matching Headings',
+  matching_information:'Matching Information', matching_features:'Matching Features',
+  diagram_labelling:'Diagram Labelling'
+};
+const MODULE_LABEL = {reading:'Reading', listening:'Listening', writing:'Writing', speaking:'Speaking'};
+const parseJson = v => { if(typeof v==='string'){ try{ return JSON.parse(v); }catch(e){ return v; } } return v; };
+
+async function loadTests(){
+  const box = document.getElementById('db-tests');
+  box.innerHTML = `<div class="card state-msg">Загружаем тесты…</div>`;
+  try{
+    const { data, error } = await sb.from('tests').select('*').order('created_at',{ascending:true});
+    if(error) throw error;
+    if(!data || !data.length){ box.innerHTML = `<div class="card state-msg">Тестов пока нет.</div>`; return; }
+    box.innerHTML = data.map(t=>`
+      <div class="card test-card">
+        <div class="info">
+          <h3>${esc(t.title)}</h3>
+          <div class="meta">${MODULE_LABEL[t.module]||esc(t.module)} · ${esc(t.test_type||'academic')} · ${t.duration_minutes||60} минут${t.source_note?` · ${esc(t.source_note)}`:''}</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" data-test="${esc(t.id)}" onclick="takeDbTest('${esc(t.id)}', this)">Take Test</button>
+        </div>
+      </div>`).join('');
+    window.__tests = Object.fromEntries(data.map(t=>[t.id,t]));
+  }catch(e){
+    console.error(e);
+    box.innerHTML = `<div class="card state-msg err">Не удалось загрузить тесты: ${esc(e.message||e)}<br><button class="btn btn-ghost" style="margin-top:10px" onclick="loadTests()">Повторить</button></div>`;
+  }
+}
+
+/* Normalise options (array of strings / objects, or {A:..}) to [{key,text}] */
+function normOptions(raw){
+  raw = parseJson(raw);
+  if(!raw) return [];
+  let items = [];
+  if(Array.isArray(raw)){
+    items = raw.map((o,i)=>{
+      if(o && typeof o==='object'){
+        return {key:String(o.key ?? o.label ?? o.letter ?? o.id ?? String.fromCharCode(65+i)).trim().toUpperCase(), text:String(o.text ?? o.value ?? o.content ?? '')};
+      }
+      const s = String(o);
+      const m = s.match(/^\s*([A-H])[\.\)\:]\s+([\s\S]*)$/i);
+      return m ? {key:m[1].toUpperCase(), text:m[2]} : {key:String.fromCharCode(65+i), text:s};
+    });
+  } else if(typeof raw==='object'){
+    items = Object.entries(raw).map(([k,v])=>({key:k.trim().toUpperCase(), text:String(v)}));
+  }
+  return items;
+}
+const TFNG_OPTS = ['True','False','Not Given'];
+function tfngIndex(ans){
+  const a = String(ans||'').trim().toUpperCase().replace(/_/g,' ');
+  if(a==='TRUE'||a==='T') return 0;
+  if(a==='FALSE'||a==='F') return 1;
+  if(a==='NOT GIVEN'||a==='NG'||a==='NOTGIVEN') return 2;
+  return -1;
+}
+
+function groupExtraHtml(g){
+  let html = '';
+  const tpl = parseJson(g.template);
+  if(Array.isArray(tpl) && tpl.length){
+    html += `<div class="locked-extra">${tpl.map(l=>esc(l).replace(/\{\{(\d+)\}\}/g,'<b>($1) ______</b>')).join('<br>')}</div>`;
+  }
+  const shared = parseJson(g.shared_options);
+  if(Array.isArray(shared) && shared.length){
+    html += `<div class="locked-extra">${shared.map(o=> typeof o==='object' ? esc(`${o.key??o.label??''} ${o.text??o.value??''}`.trim()) : esc(o)).join('<br>')}</div>`;
+  }
+  return html;
+}
+
+/* Build engine-compatible question list + passage HTML from nested rows */
+function buildQuizFromParts(test, parts){
+  const questions = [];
+  const partsOut = [];
+  let uid = 1000;
+  parts.forEach(part=>{
+    const passages = (part.passages||[]);
+    let passageHtml = '';
+    passages.forEach(p=>{
+      passageHtml += `<div class="p-title">${p.title?esc(p.title):`Part ${part.part_number}`}</div>` +
+        String(p.content||'').split(/\n+/).filter(s=>s.trim()).map(s=>`<p>${esc(s)}</p>`).join('');
+    });
+    partsOut.push({number: part.part_number, passageHtml: `<h3>Reading Passage · Part ${part.part_number}</h3>` + passageHtml});
+    let partHeadDone = false;
+    passages.forEach(p=>{
+      const groups = (p.question_groups||[]).slice().sort((a,b)=>{
+        const na = Math.min(...(a.questions||[{number:1e9}]).map(q=>q.number));
+        const nb = Math.min(...(b.questions||[{number:1e9}]).map(q=>q.number));
+        return na-nb;
+      });
+      groups.forEach(g=>{
+        const qs = (g.questions||[]).slice().sort((a,b)=>a.number-b.number);
+        let first = true;
+        qs.forEach(q=>{
+          const alts = parseJson(q.answer_alternatives);
+          const isSelect = g.question_type==='multiple_choice' && Array.isArray(alts) && alts.length>1;
+          const base = {
+            id: uid++, number: q.number, partNumber: part.part_number,
+            text: q.text ? esc(q.text) : '',
+            typeLabel: DB_TYPE_LABEL[isSelect?'multiple_select':g.question_type] || esc(g.question_type)
+          };
+          if(!partHeadDone){
+            base.partHeadHtml = `<div class="part-head"><h4>Part ${part.part_number}</h4>${part.instructions?`<p>${esc(part.instructions)}</p>`:''}</div>`;
+            partHeadDone = true;
+          }
+          if(first){
+            base.groupHeadHtml = `<div class="group-head"><b>Questions ${esc(g.range_label||'')}</b>${g.instructions?` — ${esc(g.instructions)}`:''}${g.word_limit?` <i>(${esc(g.word_limit)})</i>`:''}</div>`;
+            first = false;
+          }
+          let item = null;
+          if(g.question_type==='true_false_not_given'){
+            const ci = tfngIndex(q.answer);
+            if(ci>=0) item = {...base, type:'tfng', options:TFNG_OPTS, correct:ci};
+          } else if(g.question_type==='multiple_choice' && !isSelect){
+            const opts = normOptions(q.options);
+            const ans = String(q.answer||'').trim();
+            let ci = opts.findIndex(o=>o.key===ans.toUpperCase().charAt(0) && ans.length<=2);
+            if(ci<0) ci = opts.findIndex(o=>o.text.trim().toLowerCase()===ans.toLowerCase());
+            if(opts.length && ci>=0) item = {...base, type:'mc', options:opts.map(o=>esc(`${o.key}. ${o.text}`)), correct:ci};
+          }
+          if(!item){
+            // not interactive yet — show as text (first question of the group also shows template / shared options)
+            item = {...base, locked:true};
+            if(base.groupHeadHtml) item.extraHtml = groupExtraHtml(g);
+            if(isSelect || g.question_type==='multiple_choice'){
+              const opts = normOptions(q.options);
+              if(opts.length) item.extraHtml = (item.extraHtml||'') + `<div class="locked-extra">${opts.map(o=>esc(`${o.key}. ${o.text}`)).join('<br>')}</div>`;
+            }
+          }
+          questions.push(item);
+        });
+      });
+    });
+  });
+  return {
+    questions, parts: partsOut,
+    duration: (test.duration_minutes||60)*60,
+    title: `${MODULE_LABEL[test.module]||''} · Full Test`.trim(),
+    heading: test.title
+  };
+}
+
+async function takeDbTest(testId, btn){
+  const test = (window.__tests||{})[testId];
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Загрузка…';
+  try{
+    const { data, error } = await sb.from('parts')
+      .select('*, passages(*, question_groups(*, questions(*)))')
+      .eq('test_id', testId)
+      .order('part_number',{ascending:true});
+    if(error) throw error;
+    if(!data || !data.length) throw new Error('В тесте нет частей');
+    const custom = buildQuizFromParts(test, data);
+    if(!custom.questions.length) throw new Error('В тесте нет вопросов');
+    startQuiz('full', null, custom);
+  }catch(e){
+    console.error(e);
+    alert('Не удалось загрузить тест: '+(e.message||e));
+  }finally{
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+
+/* ---------- VOCAB FLASHCARDS ---------- */
+const VOCAB = [
+  {word:'arable', pos:'прил.', def:'suitable for growing crops', ru:'пригодный для земледелия', ex:'The region has very little arable land.'},
+  {word:'spoilage', pos:'сущ.', def:'the process of food or goods being damaged and unusable', ru:'порча (продуктов)', ex:'Shorter transport times reduce spoilage.'},
+  {word:'offset', pos:'гл.', def:'to balance one effect against an opposing one', ru:'компенсировать, уравновешивать', ex:'The benefits can be partially offset by high energy use.'},
+  {word:'scarce', pos:'прил.', def:'insufficient for the demand; hard to find', ru:'дефицитный, редкий', ex:'Arable land is scarce in densely populated cities.'},
+  {word:'runoff', pos:'сущ.', def:'water that drains away from land, often carrying pollutants', ru:'сток (воды)', ex:'Recirculating water avoids losses to runoff.'},
+  {word:'proponent', pos:'сущ.', def:'a person who advocates for something', ru:'сторонник, приверженец', ex:'Proponents argue the technology can transform food supply.'},
+  {word:'obstacle', pos:'сущ.', def:'something that blocks progress', ru:'препятствие', ex:'Energy costs remain a major obstacle.'},
+  {word:'densely', pos:'нареч.', def:'in a way that is crowded or closely packed', ru:'плотно, густо', ex:'Food security matters most in densely populated regions.'},
+];
+let vocabIndex = 0;
+function renderCard(){
+  const v = VOCAB[vocabIndex];
+  document.getElementById('fc-word').textContent = v.word;
+  document.getElementById('fc-pos').textContent = v.pos;
+  document.getElementById('fc-def').textContent = v.def;
+  document.getElementById('fc-ru').textContent = v.ru;
+  document.getElementById('fc-ex').textContent = '“'+v.ex+'”';
+  document.getElementById('fc-counter').textContent = `${vocabIndex+1} / ${VOCAB.length}`;
+  document.getElementById('flashcard-inner').classList.remove('flipped');
+}
+function flipCard(){ document.getElementById('flashcard-inner').classList.toggle('flipped'); }
+function nextCard(){ vocabIndex = (vocabIndex+1)%VOCAB.length; renderCard(); }
+function prevCard(){ vocabIndex = (vocabIndex-1+VOCAB.length)%VOCAB.length; renderCard(); }
+
+/* ---------- INIT ---------- */
+renderNav();
+renderBank();
+renderCard();
+loadTests();
+</script>
+</body>
+</html>
