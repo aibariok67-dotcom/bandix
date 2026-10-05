@@ -3,385 +3,550 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121110">
+<meta name="description" content="1609 IELTS — подготовка к IELTS: пробные тесты, банк заданий по типам, AI-план и словарь.">
 <title>1609 IELTS — прототип платформы</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --bg:#0A0C10;
-    --panel:#12141C;
-    --panel-2:#171A24;
-    --border:#1E2230;
-    --accent:#4F46E5;
-    --accent-2:#3B82F6;
-    --accent-soft:rgba(79,70,229,0.16);
-    --success:#22C55E;
-    --success-soft:rgba(34,197,94,0.12);
-    --danger:#EF4444;
-    --warning:#F59E0B;
-    --text:#E9EBF2;
-    --text-muted:#8891A6;
-    --text-dim:#565E72;
-    --r-lg:20px;
-    --r-md:14px;
-    --r-sm:10px;
-    --font-display:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --paper:#121110;
+    --paper-2:#1D1C19;
+    --card:#181715;
+    --ink:#EDE8DC;
+    --ink-2:#C2BDB0;
+    --muted:#8A8577;
+    --dim:#5C5850;
+    --line:#2A2824;
+    --line-2:#3B3833;
+    --accent:#FF6A33;
+    --accent-soft:rgba(255,106,51,.14);
+    --ok:#4CC38A;
+    --ok-soft:rgba(76,195,138,.14);
+    --bad:#F0624A;
+    --bad-soft:rgba(240,98,74,.14);
+    --serif:'Instrument Serif',Georgia,serif;
+    --sans:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --read:'Source Serif 4',Georgia,serif;
+    --r:10px;
+    --r-sm:7px;
+    --nav-h:64px;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);}
-  body{font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
-  h1,h2,h3,h4,.font-display{font-family:var(--font-display);}
-  button{font-family:inherit;cursor:pointer;}
+  html{color-scheme:dark;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);}
+  body{
+    font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  h1,h2,h3,h4{margin:0;font-weight:inherit;}
+  button{font-family:inherit;cursor:pointer;color:inherit;}
   a{color:inherit;}
-  ::selection{background:var(--accent-soft);}
+  ::selection{background:var(--accent);color:#fff;}
   .hidden{display:none !important;}
-
+  .mono{font-family:var(--mono);}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
   .app{display:flex;min-height:100vh;}
-
-  /* SIDEBAR */
+  /* ============ SIDEBAR ============ */
   .sidebar{
-    width:240px;flex:none;border-right:1px solid var(--border);
-    background:var(--panel);display:flex;flex-direction:column;
-    position:sticky;top:0;height:100vh;padding:22px 14px;
+    width:236px;flex:none;border-right:1px solid var(--line);
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:26px 14px 18px;
   }
-  .brand{font-family:var(--font-display);font-weight:800;font-size:19px;letter-spacing:-0.02em;padding:6px 10px 26px;}
-  .brand span{color:var(--accent-2);}
-  .nav-item{
-    display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;
-    color:var(--text-muted);font-weight:600;font-size:14px;margin-bottom:2px;
-    border:1px solid transparent;transition:background .15s,color .15s;
+  .brand{display:flex;align-items:baseline;gap:8px;padding:0 10px 30px;}
+  .brand b{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1;letter-spacing:-.01em;}
+  .brand span{font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:3px 6px;background:var(--ink);color:var(--paper);border-radius:4px;transform:translateY(-6px);}
+  .sidebar .nav-item{
+    display:grid;grid-template-columns:28px 1fr;align-items:center;padding:10px 12px;border-radius:var(--r-sm);
+    color:var(--ink-2);font-weight:500;font-size:14px;margin-bottom:2px;transition:background .15s,color .15s;
   }
-  .nav-item svg{flex:none;}
-  .nav-item:hover{background:var(--panel-2);color:var(--text);}
-  .nav-item.active{background:var(--accent-soft);color:var(--accent-2);border-color:rgba(79,70,229,0.35);}
-  .sidebar-foot{margin-top:auto;padding:12px 10px;font-size:12px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:14px;}
-
-  /* BOTTOM NAV (mobile) */
+  .sidebar .nav-item .n{font-family:var(--mono);font-size:11px;color:var(--dim);}
+  .sidebar .nav-item:hover{background:var(--paper-2);}
+  .sidebar .nav-item.active{background:var(--ink);color:var(--paper);}
+  .sidebar .nav-item.active .n{color:var(--accent);}
+  .sidebar-foot{margin-top:auto;padding:14px 10px 0;border-top:1px solid var(--line);}
+  .sidebar-foot .who{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:18px;}
+  .sidebar-foot .who div{font-size:13px;font-weight:600;line-height:1.2;}
+  .sidebar-foot .who small{display:block;font-weight:400;color:var(--muted);font-size:12px;}
+  /* ============ BOTTOM NAV (mobile) ============ */
   .bottomnav{
     display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
-    background:rgba(10,12,16,0.95);backdrop-filter:blur(10px);
-    border-top:1px solid var(--border);padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    background:rgba(18,17,16,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);padding:0 6px env(safe-area-inset-bottom);
     justify-content:space-around;
   }
-  .bottomnav .nav-item{flex-direction:column;gap:3px;font-size:10.5px;padding:6px 4px;border-radius:10px;text-align:center;}
-
-  /* MAIN */
-  .content{flex:1;min-width:0;padding:28px 32px 90px;max-width:1040px;}
+  .bottomnav .nav-item{
+    position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:10px 2px 9px;font-size:10.5px;font-weight:500;color:var(--muted);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .bottomnav .nav-item::before{content:'';position:absolute;top:-1px;left:28%;right:28%;height:2px;background:transparent;border-radius:0 0 2px 2px;transition:background .2s;}
+  .bottomnav .nav-item.active{color:var(--ink);}
+  .bottomnav .nav-item.active::before{background:var(--accent);}
+  /* ============ MAIN ============ */
+  .content{flex:1;min-width:0;padding:34px 40px 80px;max-width:1120px;}
+  body.in-quiz .content{max-width:1320px;padding-top:22px;padding-bottom:22px;}
+  body.in-quiz main > .footnote{display:none;}
   .tab{display:none;}
-  .tab.active{display:block;animation:fade .25s ease;}
-  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
-
-  .page-head{margin-bottom:22px;}
-  .page-head h1{font-size:22px;font-weight:800;margin:0 0 4px;letter-spacing:-0.01em;}
-  .page-head p{margin:0;color:var(--text-muted);font-size:13.5px;}
-
-  .badge{
-    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
-    color:var(--accent-2);background:var(--accent-soft);border:1px solid rgba(79,70,229,0.3);
-    padding:5px 10px;border-radius:999px;margin-bottom:16px;
-  }
-  .badge.dim{color:var(--text-muted);background:var(--panel-2);border-color:var(--border);}
-
-  .grid{display:grid;gap:14px;}
+  .tab.active{display:block;animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  .page-head{margin-bottom:28px;}
+  .page-head .eyebrow{margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .page-head .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  .page-head h1{font-family:var(--serif);font-size:46px;line-height:1.02;letter-spacing:-.015em;}
+  .page-head h1 em{color:var(--accent);}
+  .page-head p{margin:10px 0 0;color:var(--muted);font-size:15px;max-width:560px;}
+  .grid{display:grid;gap:16px;}
   .grid.cols-2{grid-template-columns:1fr 1fr;}
-  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
-  .grid.cols-4{grid-template-columns:repeat(4,1fr);}
-  @media (max-width:760px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr 1fr;}}
-
-  .card{
-    background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);
-    padding:18px 20px;
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;}
+  .card-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;}
+  .card-title h3{font-size:14px;font-weight:600;}
+  /* buttons */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:1px solid transparent;border-radius:var(--r-sm);padding:11px 18px;font-weight:600;font-size:14px;
+    transition:transform .12s,background .15s,border-color .15s,box-shadow .15s;white-space:nowrap;
+    -webkit-tap-highlight-color:transparent;
   }
-  .card.tight{padding:14px 16px;}
-
-  /* DASHBOARD */
-  .hero-score{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
-  .hero-score .num{font-family:var(--font-display);font-weight:800;font-size:52px;line-height:1;letter-spacing:-0.02em;}
-  .hero-score .num small{font-size:18px;color:var(--text-muted);font-weight:600;}
-  .hero-score .target{text-align:right;}
-  .hero-score .target .lbl{font-size:12px;color:var(--text-muted);margin-bottom:2px;}
-  .hero-score .target .val{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--accent-2);}
-  .track{position:relative;height:8px;border-radius:999px;background:var(--panel-2);margin-top:16px;overflow:visible;}
-  .track .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));}
-  .track .marker{position:absolute;top:-5px;width:2px;height:18px;background:var(--text-dim);}
-  .track .marker::after{content:attr(data-label);position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--text-dim);white-space:nowrap;}
-
-  .stat-row{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap;}
-  .stat-pill{flex:1;min-width:120px;background:var(--panel-2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;}
-  .stat-pill .lbl{font-size:11.5px;color:var(--text-muted);margin-bottom:4px;}
-  .stat-pill .val{font-family:var(--font-display);font-weight:700;font-size:19px;}
-
-  .skill-row{display:flex;align-items:center;gap:12px;padding:9px 0;}
-  .skill-row .name{width:92px;flex:none;font-size:13px;color:var(--text-muted);font-weight:600;}
-  .skill-row .bar{flex:1;height:8px;border-radius:999px;background:var(--panel-2);overflow:hidden;}
-  .skill-row .bar span{display:block;height:100%;border-radius:999px;background:var(--accent-2);}
-  .skill-row .band{width:34px;text-align:right;font-weight:700;font-size:13px;font-family:var(--font-display);}
-
-  .heat-row{display:flex;gap:6px;margin-top:14px;}
-  .heat-cell{flex:1;aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--text-dim);font-weight:600;}
-
-  /* QUESTION BANK */
-  .type-card{display:flex;flex-direction:column;gap:10px;}
-  .type-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-  .type-card h3{margin:0;font-size:15px;font-weight:700;}
-  .type-card .meta{font-size:12px;color:var(--text-muted);}
-  .acc-bar{height:6px;border-radius:999px;background:var(--panel-2);overflow:hidden;}
-  .acc-bar span{display:block;height:100%;background:var(--warning);}
-  .acc-bar span.good{background:var(--success);}
-  .btn{border:none;border-radius:12px;padding:10px 16px;font-weight:600;font-size:13.5px;transition:transform .1s,background .15s;}
-  .btn:active{transform:scale(0.98);}
-  .btn-primary{background:var(--accent);color:#fff;}
-  .btn-primary:hover{background:#433cd6;}
-  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
-  .btn-ghost:hover{background:var(--panel-2);}
-  .btn-disabled{background:var(--panel-2);color:var(--text-dim);cursor:not-allowed;}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-primary:hover{background:#fff;box-shadow:3px 3px 0 var(--accent);transform:translate(-1px,-1px);}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-accent:hover{box-shadow:3px 3px 0 var(--ink);transform:translate(-1px,-1px);}
+  .btn-ghost{background:transparent;border-color:var(--line-2);color:var(--ink);}
+  .btn-ghost:hover{background:var(--paper-2);border-color:var(--ink);}
+  .btn-disabled{background:transparent;border:1px dashed var(--line-2);color:var(--dim);cursor:not-allowed;}
   .btn.wide{width:100%;}
-  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
-  .chip{font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:999px;background:var(--panel-2);border:1px solid var(--border);color:var(--text-muted);}
-
-  /* PRACTICE */
-  .test-card{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
-  .test-card .info h3{margin:0 0 4px;font-size:15.5px;font-weight:700;}
-  .test-card .info .meta{font-size:12.5px;color:var(--text-muted);}
+  .btn:disabled{opacity:.6;}
+  .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);border:1px solid var(--line-2);padding:3px 7px;border-radius:4px;white-space:nowrap;}
+  .tag.accent{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .soon-tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px dashed var(--line-2);padding:4px 8px;border-radius:4px;}
+  /* ============ DASHBOARD ============ */
+  .score-card{position:relative;overflow:hidden;}
+  .score-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+  .score-num{font-family:var(--serif);font-size:120px;line-height:.82;letter-spacing:-.03em;margin-top:14px;}
+  .score-num small{font-size:28px;color:var(--muted);letter-spacing:0;margin-left:6px;}
+  .score-target{text-align:right;}
+  .score-target .v{font-family:var(--serif);font-size:40px;line-height:1;color:var(--accent);margin-top:6px;}
+  .scale{position:relative;margin-top:30px;}
+  .scale .rail{height:6px;background:var(--paper-2);border-radius:3px;position:relative;overflow:hidden;}
+  .scale .fill{position:absolute;inset:0 auto 0 0;background:var(--ink);border-radius:3px;}
+  .scale .goal{position:absolute;top:-7px;width:2px;height:20px;background:var(--accent);}
+  .scale .ticks{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:10.5px;color:var(--dim);}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);margin-top:24px;border-top:1px solid var(--line);}
+  .stat{padding:16px 0 0 16px;border-left:1px solid var(--line);}
+  .stat:first-child{border-left:none;padding-left:0;}
+  .stat .v{font-family:var(--serif);font-size:36px;line-height:1;margin-top:6px;}
+  .stat .v small{font-family:var(--mono);font-size:11px;color:var(--accent);margin-left:4px;vertical-align:middle;}
+  .skill-row{display:grid;grid-template-columns:86px 1fr 34px;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);}
+  .skill-row:last-of-type{border-bottom:none;}
+  .skill-row .name{font-size:13.5px;font-weight:500;}
+  .skill-row .bar{height:4px;background:var(--paper-2);border-radius:2px;overflow:hidden;}
+  .skill-row .bar span{display:block;height:100%;background:var(--ink);}
+  .skill-row.weak .bar span{background:var(--accent);}
+  .skill-row .band{text-align:right;font-family:var(--mono);font-size:13px;font-weight:600;}
+  .heat-row{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px;}
+  .heat-cell{aspect-ratio:1;border-radius:4px;display:flex;align-items:flex-end;justify-content:flex-start;padding:5px;font-family:var(--mono);font-size:10px;font-weight:500;}
+  .continue{
+    margin-top:16px;background:var(--ink);color:var(--paper);border-radius:var(--r);padding:24px 26px;
+    display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;position:relative;overflow:hidden;
+  }
+  .continue .eyebrow{color:var(--dim);}
+  .continue h3{font-family:var(--serif);font-size:32px;line-height:1.05;margin-top:8px;}
+  .continue h3 em{color:var(--accent);}
+  .continue p{margin:6px 0 0;color:var(--dim);font-size:13.5px;}
+  /* ============ QUESTION BANK ============ */
+  .chip-row{display:flex;gap:6px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none;}
+  .chip-row::-webkit-scrollbar{display:none;}
+  .chip{font-size:13px;font-weight:500;padding:7px 14px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap;}
+  .chip.active{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+  .type-card{display:flex;flex-direction:column;gap:16px;}
+  .type-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .type-card h3{font-family:var(--serif);font-size:28px;line-height:1.05;}
+  .type-card .meta{font-size:12.5px;color:var(--muted);margin-top:6px;}
+  .type-card .acc{text-align:right;}
+  .type-card .acc .v{font-family:var(--serif);font-size:40px;line-height:1;}
+  .type-card .acc .v.low{color:var(--accent);}
+  .acc-bar{height:4px;background:var(--paper-2);border-radius:2px;overflow:hidden;}
+  .acc-bar span{display:block;height:100%;background:var(--accent);}
+  .acc-bar span.good{background:var(--ink);}
+  .type-card.soon{background:transparent;border-style:dashed;}
+  .type-card.soon h3{color:var(--muted);}
+  /* ============ PRACTICE: LIST ============ */
+  .test-list{display:flex;flex-direction:column;border-top:1px solid var(--ink);}
+  .test-card{
+    display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:18px;
+    padding:22px 4px;border-bottom:1px solid var(--line);transition:background .15s;
+  }
+  .test-card:hover{background:rgba(255,255,255,.025);}
+  .test-card .t-idx{font-family:var(--serif);font-size:38px;line-height:1;color:var(--dim);}
+  .test-card:hover .t-idx{color:var(--accent);}
+  .test-card .t-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+  .test-card h3{font-family:var(--serif);font-size:28px;line-height:1.1;}
+  .test-card .meta{font-size:13px;color:var(--muted);margin-top:4px;}
   .test-card .actions{display:flex;gap:8px;}
-  .soon-tag{font-size:10.5px;font-weight:700;color:var(--text-dim);background:var(--panel-2);border:1px solid var(--border);padding:3px 8px;border-radius:999px;}
-
-  .quiz-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-  @media (max-width:820px){.quiz-layout{grid-template-columns:1fr;}}
-  .passage-box{max-height:520px;overflow-y:auto;}
-  .passage-box h3{margin-top:0;}
-  .passage-box p{color:#C7CBD9;font-size:14px;line-height:1.75;}
-  .quiz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-  .timer{font-family:var(--font-display);font-weight:700;font-size:15px;background:var(--panel-2);border:1px solid var(--border);padding:6px 14px;border-radius:999px;}
-  .timer.low{color:var(--danger);border-color:rgba(239,68,68,0.4);}
-  .q-block{padding:16px 0;border-bottom:1px solid var(--border);}
+  .test-card.soon h3,.test-card.soon .t-idx{color:var(--dim);}
+  .state-msg{padding:28px 4px;color:var(--muted);font-size:14px;border-bottom:1px solid var(--line);}
+  .state-msg.err{color:var(--bad);}
+  .skel{height:96px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,transparent 0,rgba(255,255,255,.06) 50%,transparent 100%) var(--paper-2);background-size:200% 100%;animation:sh 1.3s infinite linear;opacity:.6;}
+  @keyframes sh{from{background-position:200% 0;}to{background-position:-200% 0;}}
+  /* ============ PRACTICE: QUIZ ============ */
+  #practice-quiz{display:flex;flex-direction:column;height:calc(100vh - 44px);height:calc(100dvh - 44px);}
+  .quiz-head{flex:none;display:flex;align-items:center;gap:14px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--ink);}
+  .quiz-close{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line-2);background:transparent;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s;}
+  .quiz-close:hover{background:var(--paper-2);border-color:var(--ink);}
+  .quiz-titles{flex:1;min-width:0;}
+  .quiz-titles h2{font-family:var(--serif);font-size:28px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .timer{flex:none;font-family:var(--mono);font-weight:600;font-size:15px;padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--ink);display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums;}
+  .timer::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1s steps(2) infinite;}
+  .timer.low{background:var(--bad);border-color:var(--bad);color:#fff;}
+  .timer.low::before{background:#fff;}
+  @keyframes blink{50%{opacity:.2;}}
+  .part-tabs{flex:none;display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;}
+  .part-tabs::-webkit-scrollbar{display:none;}
+  .part-tab{
+    flex:none;display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:999px;
+    border:1px solid var(--line-2);background:transparent;font-weight:600;font-size:13.5px;transition:all .15s;
+  }
+  .part-tab small{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--muted);}
+  .part-tab:hover{border-color:var(--ink);}
+  .part-tab.active{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+  .part-tab.active small{color:var(--accent);}
+  .pane-switch{display:none;}
+  .quiz-layout{flex:1;min-height:0;display:grid;grid-template-columns:1.12fr 1fr;gap:16px;}
+  .pane{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  .pane::-webkit-scrollbar{width:8px;}
+  .pane::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:4px;border:2px solid var(--card);}
+  .passage-box{padding:28px 32px;}
+  .passage-box h3{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;}
+  .passage-box .p-title{font-family:var(--serif);font-size:34px;line-height:1.08;margin:28px 0 14px;}
+  .passage-box h3 + .p-title{margin-top:0;}
+  .passage-box p{font-family:var(--read);font-size:17px;line-height:1.75;color:var(--ink-2);margin:0 0 1em;}
+  .passage-box p b{color:var(--ink);}
+  #quiz-questions{padding:6px 24px 20px;}
+  .part-head{padding:18px 0 4px;}
+  .part-head h4{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .part-head p{margin:4px 0 0;font-size:13.5px;color:var(--ink-2);}
+  .group-head{margin:18px 0 4px;padding:12px 14px;border-left:3px solid var(--accent);background:var(--paper);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:13.5px;color:var(--ink-2);}
+  .group-head b{color:var(--ink);font-weight:600;}
+  .q-block{padding:20px 0;border-bottom:1px dashed var(--line);}
   .q-block:last-child{border-bottom:none;}
-  .q-num{font-size:11.5px;color:var(--text-dim);font-weight:700;margin-bottom:6px;letter-spacing:.02em;}
-  .q-text{font-size:14.5px;font-weight:600;margin-bottom:10px;}
-  .opt{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:7px;font-size:13.5px;color:var(--text-muted);transition:border-color .12s,color .12s;}
-  .opt:hover{border-color:var(--accent-2);color:var(--text);}
-  .opt input{accent-color:var(--accent);}
-  .opt.selected{border-color:var(--accent-2);color:var(--text);background:var(--accent-soft);}
-
-  /* Supabase-driven practice additions */
-  .state-msg{color:var(--text-muted);font-size:13.5px;text-align:center;padding:26px 10px;}
-  .state-msg.err{color:var(--danger);}
-  .part-head{margin:6px 0 0;padding:12px 0 4px;border-top:1px solid var(--border);}
-  .part-head:first-child{border-top:none;padding-top:0;}
-  .part-head h4{margin:0;font-size:14px;font-weight:800;color:var(--accent-2);}
-  .part-head p{margin:2px 0 0;font-size:12.5px;color:var(--text-muted);}
-  .group-head{margin:14px 0 2px;padding:10px 12px;border-radius:var(--r-sm);background:var(--panel-2);border:1px solid var(--border);font-size:12.5px;color:var(--text-muted);}
-  .group-head b{color:var(--text);}
-  .part-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-  .part-tab{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:12px;border:1px solid var(--border);background:var(--panel);color:var(--text-muted);font-weight:700;font-size:13.5px;font-family:var(--font-display);transition:background .15s,color .15s,border-color .15s;}
-  .part-tab:hover{background:var(--panel-2);color:var(--text);}
-  .part-tab.active{background:var(--accent-soft);color:var(--accent-2);border-color:rgba(79,70,229,0.35);}
-  .part-tab small{font-family:var(--font-body);font-weight:600;font-size:11px;color:var(--text-dim);}
-  .part-tab.active small{color:var(--accent-2);}
-  .locked-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--warning);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);padding:3px 9px;border-radius:999px;margin-top:4px;}
-  .locked-extra{font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:6px;}
-  .passage-box .p-title{font-size:15px;font-weight:800;margin:18px 0 8px;}
-  .passage-box .p-title:first-of-type{margin-top:0;}
-
-  .results-hero{text-align:center;padding:26px 20px;}
-  .results-hero .band-num{font-family:var(--font-display);font-weight:800;font-size:64px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;}
-  .results-hero .band-lbl{color:var(--text-muted);font-size:13px;margin-top:6px;}
-  .review-row{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .q-num{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .q-n{min-width:26px;height:26px;padding:0 6px;border-radius:6px;background:var(--ink);color:var(--paper);display:inline-flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:0;}
+  .q-text{font-size:15.5px;font-weight:500;line-height:1.5;margin-bottom:12px;}
+  .opt{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-sm);border:1px solid var(--line);
+    margin-bottom:7px;font-size:14.5px;color:var(--ink-2);background:var(--card);cursor:pointer;
+    transition:border-color .12s,background .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent;
+  }
+  .opt:hover{border-color:var(--ink-2);}
+  .opt input{
+    appearance:none;-webkit-appearance:none;flex:none;margin:0;width:18px;height:18px;border-radius:50%;
+    border:1.5px solid var(--line-2);background:transparent;transition:border .12s;
+  }
+  .opt.selected{border-color:var(--ink);background:var(--paper-2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);}
+  .opt.selected input,.opt input:checked{border:5.5px solid var(--ink);}
+  .locked-tag{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px dashed var(--accent);padding:4px 8px;border-radius:4px;margin-top:6px;}
+  .locked-extra{font-size:14px;color:var(--ink-2);line-height:1.75;margin-bottom:8px;}
+  .locked-extra b{font-family:var(--mono);font-weight:500;color:var(--accent);}
+  .quiz-actions{flex:none;display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:14px;}
+  .quiz-actions .progress-note{margin-right:auto;font-family:var(--mono);font-size:12px;color:var(--muted);}
+  /* ============ RESULTS ============ */
+  .results-hero{display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:end;padding:30px;}
+  .results-hero .band-num{font-family:var(--serif);font-size:160px;line-height:.78;letter-spacing:-.04em;}
+  .results-hero .band-lbl{font-size:15px;color:var(--ink-2);}
+  .results-hero .band-lbl b{display:block;font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.05;color:var(--ink);margin:6px 0 10px;}
+  .review-row{display:grid;grid-template-columns:26px 1fr;gap:12px;padding:14px 0;border-bottom:1px dashed var(--line);font-size:14px;}
   .review-row:last-child{border-bottom:none;}
-  .review-icon{flex:none;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
-  .review-icon.ok{background:var(--success-soft);color:var(--success);}
-  .review-icon.bad{background:rgba(239,68,68,0.12);color:var(--danger);}
-  .review-text .yours{color:var(--text-muted);}
-  .review-text .correct{color:var(--success);}
-
-  /* AI PLAN */
-  .plan-item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);}
-  .plan-item:last-child{border-bottom:none;}
-  .plan-day{width:44px;flex:none;font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text-muted);padding-top:2px;}
-  .plan-item h4{margin:0 0 3px;font-size:14px;font-weight:700;}
-  .plan-item p{margin:0;font-size:12.5px;color:var(--text-muted);}
-  .ai-note{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);border:1px solid rgba(79,70,229,0.3);border-radius:var(--r-md);padding:14px 16px;font-size:13.5px;color:#C9CCFB;margin-bottom:18px;}
-
-  /* VOCAB */
-  .flash-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:10px 0 4px;}
-  .flashcard{width:100%;max-width:420px;height:220px;perspective:1200px;}
-  .flashcard-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d;cursor:pointer;}
+  .review-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+  .review-icon.ok{background:var(--ok-soft);color:var(--ok);}
+  .review-icon.bad{background:var(--bad-soft);color:var(--bad);}
+  .review-text > div:first-child{font-weight:500;margin-bottom:4px;}
+  .review-text .yours{color:var(--muted);font-size:13.5px;}
+  .review-text .correct{color:var(--ok);font-size:13.5px;}
+  /* ============ AI ============ */
+  .ai-note{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;border:1px solid var(--ink);background:var(--card);border-radius:var(--r);padding:16px 18px;font-size:14.5px;color:var(--ink-2);margin-bottom:18px;}
+  .ai-mark{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;background:var(--ink);color:var(--paper);padding:4px 7px;border-radius:4px;}
+  .ai-note b{color:var(--accent);font-weight:600;}
+  .plan-item{display:grid;grid-template-columns:56px 1fr auto;gap:16px;align-items:start;padding:18px 0;border-bottom:1px dashed var(--line);}
+  .plan-item:first-child{padding-top:4px;}
+  .plan-item:last-child{border-bottom:none;padding-bottom:4px;}
+  .plan-day{font-family:var(--serif);font-size:28px;line-height:1;color:var(--ink);}
+  .plan-item.today .plan-day{color:var(--accent);}
+  .plan-item h4{font-size:15px;font-weight:600;margin-bottom:4px;}
+  .plan-item p{margin:0;font-size:13.5px;color:var(--muted);}
+  .plan-check{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--line-2);margin-top:4px;}
+  .plan-item.done .plan-check{background:var(--ink);border-color:var(--ink);position:relative;}
+  .plan-item.done .plan-check::after{content:'';position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid var(--paper);border-width:0 2px 2px 0;transform:rotate(45deg);}
+  .plan-item.done h4{text-decoration:line-through;text-decoration-color:var(--accent);color:var(--muted);}
+  /* ============ VOCAB ============ */
+  .flash-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;padding:6px 0;}
+  .flashcard{width:100%;max-width:520px;height:300px;perspective:1400px;}
+  .flashcard-inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,.7,.2,1);transform-style:preserve-3d;cursor:pointer;}
   .flashcard-inner.flipped{transform:rotateY(180deg);}
-  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;}
-  .face.back{transform:rotateY(180deg);background:var(--panel-2);}
-  .face .word{font-family:var(--font-display);font-weight:800;font-size:26px;}
-  .face .pos{color:var(--text-dim);font-size:12px;margin-top:4px;}
-  .face .hint{color:var(--text-dim);font-size:11.5px;margin-top:14px;}
-  .face .def{font-size:14px;color:var(--text);margin-bottom:8px;}
-  .face .ru{color:var(--accent-2);font-weight:700;font-size:15px;margin-bottom:10px;}
-  .face .ex{color:var(--text-muted);font-size:12.5px;font-style:italic;}
-  .flash-controls{display:flex;gap:10px;align-items:center;}
-  .flash-counter{font-size:12.5px;color:var(--text-muted);font-weight:600;}
-
-  .footnote{margin-top:30px;font-size:11.5px;color:var(--text-dim);text-align:center;}
-
+  .face{
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r);
+    border:1px solid var(--line-2);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:28px;box-shadow:0 20px 40px -20px rgba(0,0,0,.7);
+  }
+  .face.front{background:linear-gradient(to bottom,transparent 52px,var(--accent) 52px,var(--accent) 53px,transparent 53px),var(--card);}
+  .face.back{
+    transform:rotateY(180deg);
+    background:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,rgba(255,255,255,.05) 31px,rgba(255,255,255,.05) 32px),var(--card);
+    background-position:0 18px;
+  }
+  .face .word{font-family:var(--serif);font-size:62px;line-height:1;letter-spacing:-.01em;}
+  .face .pos{font-family:var(--mono);color:var(--muted);font-size:12px;margin-top:10px;}
+  .face .hint{position:absolute;bottom:16px;font-family:var(--mono);color:var(--dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase;}
+  .face .def{font-size:15px;color:var(--ink-2);margin-bottom:10px;}
+  .face .ru{font-family:var(--serif);color:var(--accent);font-size:34px;line-height:1.05;margin-bottom:14px;}
+  .face .ex{font-family:var(--read);color:var(--ink-2);font-size:15px;font-style:italic;}
+  .flash-controls{display:flex;gap:12px;align-items:center;}
+  .flash-counter{font-family:var(--mono);font-size:13px;color:var(--muted);min-width:56px;text-align:center;}
+  .footnote{margin-top:36px;font-size:12px;color:var(--muted);text-align:center;}
+  /* ============ RESPONSIVE ============ */
+  @media (max-width:980px){
+    .content{padding:28px 24px 80px;}
+    .grid.cols-2{grid-template-columns:1fr;}
+  }
   @media (max-width:900px){
     .sidebar{display:none;}
     .bottomnav{display:flex;}
-    .content{padding:20px 16px 96px;}
-    .hero-score .num{font-size:40px;}
+    .content{padding:22px 16px calc(var(--nav-h) + 36px + env(safe-area-inset-bottom));}
+    .page-head{margin-bottom:22px;}
+    .page-head h1{font-size:36px;}
+    .page-head p{font-size:14px;}
+    .card{padding:18px;}
+    .score-num{font-size:92px;}
+    .score-target .v{font-size:32px;}
+    .stat .v{font-size:28px;}
+    .stat{padding-left:12px;}
+    .continue{padding:20px;}
+    .continue h3{font-size:26px;}
+    .continue .btn{width:100%;}
+    .type-card h3{font-size:24px;}
+    .test-card{grid-template-columns:36px 1fr;gap:4px 12px;padding:18px 0;}
+    .test-card .t-idx{font-size:28px;grid-row:span 2;align-self:start;}
+    .test-card h3{font-size:23px;}
+    .test-card .actions{grid-column:2;margin-top:12px;}
+    .test-card .actions .btn{flex:1;}
+    .results-hero{grid-template-columns:1fr;gap:14px;padding:22px;}
+    .results-hero .band-num{font-size:120px;}
+    .plan-item{grid-template-columns:44px 1fr auto;gap:12px;}
+    .plan-day{font-size:24px;}
+    .flashcard{height:280px;}
+    .face .word{font-size:50px;}
+    /* ---- Fullscreen quiz on phones ---- */
+    body.in-quiz{overflow:hidden;}
+    body.in-quiz .bottomnav{display:none;}
+    body.in-quiz #practice-quiz{
+      position:fixed;inset:0;z-index:60;height:auto;background:var(--paper);
+      padding:calc(10px + env(safe-area-inset-top)) 12px 0;
+    }
+    .quiz-head{gap:10px;padding-bottom:10px;margin-bottom:10px;}
+    .quiz-close{width:36px;height:36px;}
+    .quiz-titles .eyebrow{font-size:10px;}
+    .quiz-titles h2{font-size:21px;}
+    .timer{font-size:14px;padding:7px 10px;}
+    .part-tabs{margin-bottom:10px;}
+    .part-tab{padding:8px 13px;font-size:13px;}
+    .pane-switch{
+      flex:none;display:grid;grid-template-columns:1fr 1fr;padding:3px;margin-bottom:10px;
+      background:var(--paper-2);border-radius:var(--r-sm);
+    }
+    .pane-switch button{
+      border:none;background:transparent;padding:9px 6px;border-radius:5px;font-weight:600;font-size:13.5px;color:var(--muted);
+      display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,color .15s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .pane-switch button small{font-family:var(--mono);font-size:11px;font-weight:500;}
+    .pane-switch button.active{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+    .pane-switch button.active small{color:var(--accent);}
+    .quiz-layout{display:block;position:relative;}
+    .quiz-layout .pane{position:absolute;inset:0;}
+    .quiz-layout[data-pane="text"] #quiz-questions{display:none;}
+    .quiz-layout[data-pane="questions"] .passage-box{display:none;}
+    .passage-box{padding:20px 18px 28px;}
+    .passage-box .p-title{font-size:28px;}
+    .passage-box p{font-size:16.5px;line-height:1.7;}
+    #quiz-questions{padding:2px 16px 24px;}
+    .opt{padding:13px 14px;font-size:15px;}
+    .quiz-actions{
+      margin:10px -12px 0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+      border-top:1px solid var(--line);background:var(--paper);
+    }
+    .quiz-actions .progress-note{display:none;}
+    .quiz-actions .btn{flex:1;padding:13px 10px;}
+    .quiz-actions .btn-ghost{flex:0 0 auto;}
+  }
+  @media (max-width:380px){
+    .page-head h1{font-size:31px;}
+    .score-num{font-size:80px;}
+    .stat .v{font-size:24px;}
+    .bottomnav .nav-item{font-size:9.5px;}
   }
 </style>
 </head>
 <body>
-
 <div class="app">
   <aside class="sidebar" id="sidebar"></aside>
   <main class="content">
-
     <!-- DASHBOARD -->
     <section class="tab active" id="tab-dashboard">
       <div class="page-head">
-        <span class="badge">🇰🇿 Демо-прототип · для локального IELTS-рынка</span>
-        <h1>С возвращением, Айгерим 👋</h1>
+        <div class="eyebrow">Демо-прототип · Казахстан</div>
+        <h1>С возвращением, <em>Айгерим</em></h1>
         <p>Вот как проходит подготовка к экзамену на этой неделе.</p>
       </div>
-
-      <div class="grid cols-2" style="align-items:stretch;margin-bottom:14px;">
-        <div class="card">
-          <div class="hero-score">
+      <div class="grid cols-2" style="align-items:stretch;">
+        <div class="card score-card">
+          <div class="score-top">
             <div>
-              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Текущий балл (оценочно)</div>
-              <div class="num">6.0<small> Band</small></div>
+              <div class="eyebrow">Текущий балл · оценка</div>
+              <div class="score-num">6.0<small>/ 9</small></div>
             </div>
-            <div class="target">
-              <div class="lbl">Цель</div>
-              <div class="val">7.5 Band</div>
+            <div class="score-target">
+              <div class="eyebrow">Цель</div>
+              <div class="v">7.5</div>
             </div>
           </div>
-          <div class="track">
-            <div class="fill" style="width:66%"></div>
-            <div class="marker" style="left:83%" data-label="цель"></div>
+          <div class="scale">
+            <div class="rail"><div class="fill" style="width:66.6%"></div></div>
+            <div class="goal" style="left:83.3%"></div>
+            <div class="ticks"><span>0</span><span>3</span><span>6</span><span>9</span></div>
           </div>
           <div class="stat-row">
-            <div class="stat-pill"><div class="lbl">Дней до экзамена</div><div class="val">45</div></div>
-            <div class="stat-pill"><div class="lbl">Серия дней</div><div class="val">4 🔥</div></div>
-            <div class="stat-pill"><div class="lbl">Точность</div><div class="val">71%</div></div>
+            <div class="stat"><div class="eyebrow">До экзамена</div><div class="v">45<small>дн</small></div></div>
+            <div class="stat"><div class="eyebrow">Серия</div><div class="v">4<small>дн</small></div></div>
+            <div class="stat"><div class="eyebrow">Точность</div><div class="v">71<small>%</small></div></div>
           </div>
         </div>
-
         <div class="card">
-          <h3 style="margin:0 0 12px;font-size:14px;">Баллы по навыкам</h3>
+          <div class="card-title"><h3>Баллы по навыкам</h3><span class="eyebrow">Band</span></div>
           <div class="skill-row"><div class="name">Reading</div><div class="bar"><span style="width:72%"></span></div><div class="band">6.5</div></div>
           <div class="skill-row"><div class="name">Listening</div><div class="bar"><span style="width:67%"></span></div><div class="band">6.0</div></div>
-          <div class="skill-row"><div class="name">Writing</div><div class="bar"><span style="width:61%"></span></div><div class="band">5.5</div></div>
+          <div class="skill-row weak"><div class="name">Writing</div><div class="bar"><span style="width:61%"></span></div><div class="band">5.5</div></div>
           <div class="skill-row"><div class="name">Speaking</div><div class="bar"><span style="width:67%"></span></div><div class="band">6.0</div></div>
-          <h3 style="margin:16px 0 4px;font-size:14px;">Активность за неделю</h3>
+          <div class="card-title" style="margin:22px 0 0;"><h3>Активность за неделю</h3><span class="eyebrow">15 сессий</span></div>
           <div class="heat-row" id="heatmap"></div>
         </div>
       </div>
-
-      <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+      <div class="continue">
         <div>
-          <h3 style="margin:0 0 4px;font-size:15px;">Продолжить подготовку</h3>
-          <p style="margin:0;color:var(--text-muted);font-size:13px;">Reading · демо-тест «Vertical Farming» · 8 вопросов · ~12 мин</p>
+          <div class="eyebrow">Продолжить подготовку</div>
+          <h3>Reading: <em>Vertical Farming</em></h3>
+          <p>Демо-тест · 8 вопросов · ~12 мин</p>
         </div>
-        <button class="btn btn-primary" onclick="goToFullTest()">Начать тест →</button>
+        <button class="btn btn-accent" onclick="goToFullTest()">Начать тест →</button>
       </div>
     </section>
-
     <!-- QUESTION BANK -->
     <section class="tab" id="tab-bank">
       <div class="page-head">
-        <h1>Банк заданий</h1>
+        <div class="eyebrow">Банк заданий</div>
+        <h1>Тренируй <em>по типам</em>, не тестами</h1>
         <p>Вопросы сгруппированы по типу, а не по тесту целиком — удобно закрывать слабые места точечно.</p>
       </div>
       <div class="chip-row">
-        <span class="chip" style="background:var(--accent-soft);border-color:rgba(79,70,229,.35);color:var(--accent-2);">Все</span>
+        <span class="chip active">Все</span>
         <span class="chip">Reading</span>
         <span class="chip">Listening</span>
       </div>
       <div class="grid cols-2" id="bank-grid"></div>
-      <p class="footnote">В демо доступно ограниченное число вопросов на тип. В полной версии — сотни вопросов на категорию, как в базе Engnovate.</p>
+      <p class="footnote">В демо доступно ограниченное число вопросов на тип. В полной версии — сотни вопросов на категорию.</p>
     </section>
-
     <!-- PRACTICE / MOCK TESTS -->
     <section class="tab" id="tab-practice">
       <div id="practice-list">
         <div class="page-head">
-          <h1>Пробные тесты</h1>
+          <div class="eyebrow">Пробные тесты</div>
+          <h1>Экзамен <em>в реальном</em> формате</h1>
           <p>Полный формат экзамена с таймером — как настоящий компьютерный IELTS.</p>
         </div>
-        <div class="grid" style="grid-template-columns:1fr;">
+        <div class="test-list">
           <!-- Populated from Supabase (table: tests) -->
-          <div id="db-tests" style="display:grid;gap:14px;grid-template-columns:1fr;">
-            <div class="card state-msg">Загружаем тесты…</div>
-          </div>
-          <div class="card test-card">
+          <div id="db-tests"><div class="skel"></div></div>
+          <div class="test-card soon">
+            <div class="t-idx">—</div>
             <div class="info">
+              <div class="t-tags"><span class="tag">Full mock</span><span class="tag">2ч 40м</span></div>
               <h3>Cambridge-style Academic Mock 1</h3>
-              <div class="meta">Full Mock · 4 части · 2ч 40м</div>
+              <div class="meta">4 части: Listening, Reading, Writing, Speaking</div>
             </div>
             <div class="actions"><span class="soon-tag">Скоро</span></div>
           </div>
-          <div class="card test-card">
+          <div class="test-card soon">
+            <div class="t-idx">—</div>
             <div class="info">
-              <h3>Listening · Section 2: Map Labelling</h3>
-              <div class="meta">Listening · требует аудио-контент</div>
+              <div class="t-tags"><span class="tag">Listening</span><span class="tag">Section 2</span></div>
+              <h3>Map Labelling</h3>
+              <div class="meta">Требует аудио-контент</div>
             </div>
             <div class="actions"><span class="soon-tag">Скоро</span></div>
           </div>
         </div>
       </div>
-
       <div id="practice-quiz" class="hidden">
         <div class="quiz-head">
-          <div>
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;" id="quiz-title">Reading Practice</div>
-            <h2 style="margin:0;font-size:18px;" id="quiz-heading">Vertical Farming</h2>
+          <button class="quiz-close" onclick="exitQuiz()" aria-label="Выйти из теста">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <div class="quiz-titles">
+            <div class="eyebrow" id="quiz-title">Reading Practice</div>
+            <h2 id="quiz-heading">Vertical Farming</h2>
           </div>
           <div class="timer" id="timer">12:00</div>
         </div>
         <div class="part-tabs hidden" id="part-tabs"></div>
-        <div class="quiz-layout">
-          <div class="card passage-box" id="passage-box">
+        <div class="pane-switch" id="pane-switch">
+          <button id="pane-btn-text" class="active" onclick="setPane('text')">Текст</button>
+          <button id="pane-btn-questions" onclick="setPane('questions')">Вопросы <small id="pane-count">0/0</small></button>
+        </div>
+        <div class="quiz-layout" id="quiz-layout" data-pane="text">
+          <div class="card pane passage-box" id="passage-box">
             <h3>Reading Passage</h3>
+            <div class="p-title">Vertical Farming</div>
             <p><b>Vertical farming</b> — the practice of growing crops in stacked layers within controlled indoor environments — has moved from a futuristic concept to a growing industry over the past decade. Proponents argue that by building upward rather than outward, cities can produce fresh produce with a fraction of the land traditionally required. In Singapore, where arable land is scarce, several vertical farms now supply supermarkets with leafy greens grown just kilometres from where they are sold, cutting transport time and reducing spoilage.</p>
             <p>Water efficiency is often cited as one of the technology's clearest advantages: hydroponic and aeroponic systems can use up to ninety percent less water than open-field agriculture, since moisture is recirculated rather than lost to evaporation or runoff. However, the energy required to power artificial lighting and climate control remains a significant obstacle. Unlike traditional farms that rely on sunlight, vertical farms depend heavily on electricity, and in regions where that electricity comes from fossil fuels, the environmental benefits can be partially offset.</p>
             <p>Despite these challenges, investment in the sector continues to grow, driven partly by concerns over food security in densely populated regions and partly by advances in LED technology that have lowered energy costs. Whether vertical farming can scale to feed entire cities, rather than supplement existing food systems, remains an open question among agricultural economists.</p>
           </div>
-          <div class="card" id="quiz-questions" style="max-height:520px;overflow-y:auto;"></div>
+          <div class="card pane" id="quiz-questions"></div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+        <div class="quiz-actions">
+          <span class="progress-note" id="progress-note"></span>
           <button class="btn btn-ghost" onclick="exitQuiz()">Отмена</button>
           <button class="btn btn-primary" onclick="submitQuiz()">Завершить тест</button>
         </div>
       </div>
-
       <div id="practice-results" class="hidden"></div>
     </section>
-
     <!-- AI STUDY PLAN -->
     <section class="tab" id="tab-ai">
       <div class="page-head">
-        <h1>AI-план подготовки</h1>
+        <div class="eyebrow">AI-план подготовки</div>
+        <h1>Неделя, собранная <em>под тебя</em></h1>
         <p>Составляется на основе результатов ваших тестов.</p>
       </div>
       <div class="ai-note">
-        <div>🤖</div>
-        <div>Ваш последний прогон показывает точность 42% в заданиях True / False / Not Given — это сейчас самое слабое место. План на неделю выстроен вокруг этого раздела, с постепенным добавлением Writing.</div>
+        <div class="ai-mark">AI</div>
+        <div>Ваш последний прогон показывает точность <b>42%</b> в заданиях True / False / Not Given — это сейчас самое слабое место. План на неделю выстроен вокруг этого раздела, с постепенным добавлением Writing.</div>
       </div>
       <div class="card">
-        <div class="plan-item"><div class="plan-day">Пн</div><div><h4>True / False / Not Given — фокус-тренировка</h4><p>10 вопросов из банка заданий, разбор ошибок после каждого</p></div></div>
-        <div class="plan-item"><div class="plan-day">Вт</div><div><h4>Reading: Vertical Farming (полный тест)</h4><p>8 вопросов, таймер 12 минут — тренировка темпа</p></div></div>
-        <div class="plan-item"><div class="plan-day">Ср</div><div><h4>Writing Task 2 + AI-фидбек</h4><p>Проверка по критериям IELTS: Task Response, Coherence, Lexical Resource, Grammar</p></div></div>
-        <div class="plan-item"><div class="plan-day">Чт</div><div><h4>Listening Section 2: Map Labelling</h4><p>Появится после подключения аудио-базы</p></div></div>
+        <div class="plan-item done"><div class="plan-day">Пн</div><div><h4>True / False / Not Given — фокус-тренировка</h4><p>10 вопросов из банка заданий, разбор ошибок после каждого</p></div><div class="plan-check"></div></div>
+        <div class="plan-item today"><div class="plan-day">Вт</div><div><h4>Reading: Vertical Farming (полный тест)</h4><p>8 вопросов, таймер 12 минут — тренировка темпа</p></div><div class="plan-check"></div></div>
+        <div class="plan-item"><div class="plan-day">Ср</div><div><h4>Writing Task 2 + AI-фидбек</h4><p>Проверка по критериям IELTS: Task Response, Coherence, Lexical Resource, Grammar</p></div><div class="plan-check"></div></div>
+        <div class="plan-item"><div class="plan-day">Чт</div><div><h4>Listening Section 2: Map Labelling</h4><p>Появится после подключения аудио-базы</p></div><div class="plan-check"></div></div>
       </div>
       <p class="footnote">В прототипе план статичный. В реальной версии его будет генерировать LLM на основе истории ответов пользователя.</p>
     </section>
-
     <!-- VOCAB BLITZ -->
     <section class="tab" id="tab-vocab">
       <div class="page-head">
-        <h1>Vocab Blitz</h1>
+        <div class="eyebrow">Vocab Blitz</div>
+        <h1>Слова <em>из текстов</em></h1>
         <p>Академическая лексика из текстов — с переводом на русский.</p>
       </div>
       <div class="flash-wrap">
@@ -393,8 +558,8 @@
               <div class="hint">нажмите, чтобы перевернуть</div>
             </div>
             <div class="face back">
-              <div class="def" id="fc-def"></div>
               <div class="ru" id="fc-ru"></div>
+              <div class="def" id="fc-def"></div>
               <div class="ex" id="fc-ex"></div>
             </div>
           </div>
@@ -402,38 +567,37 @@
         <div class="flash-controls">
           <button class="btn btn-ghost" onclick="prevCard()">← Назад</button>
           <span class="flash-counter" id="fc-counter">1 / 8</span>
-          <button class="btn btn-ghost" onclick="nextCard()">Дальше →</button>
+          <button class="btn btn-primary" onclick="nextCard()">Дальше →</button>
         </div>
       </div>
     </section>
-
     <p class="footnote">Прототип для демонстрации механики и дизайна. Учебные материалы сгенерированы для показа, не взяты из Cambridge или Engnovate.</p>
   </main>
 </div>
-
 <nav class="bottomnav" id="bottomnav"></nav>
-
 <script>
 /* ---------- SUPABASE CONFIG (public anon key — safe for frontend) ---------- */
 const SUPABASE_URL = 'https://msnnapbzvpzmseuacjzy.supabase.co';   // ← вставь свой Project URL
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbm5hcGJ6dnB6bXNldWFjanp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTU4NzQsImV4cCI6MjEwNTk5MTg3NH0.A3ok6LE2TSD_p-X6G7X1htCHOE5Q2fbw6nnuOPj2TNU';               // ← вставь свой anon public key
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 /* ---------- NAV ---------- */
 const NAV = [
-  {id:'dashboard', label:'Главная', icon:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'},
-  {id:'bank', label:'Банк заданий', icon:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v18h4.5a2.5 2.5 0 0 0 2.5-2.5z"/>'},
-  {id:'ai', label:'AI-план', icon:'<rect x="5" y="8" width="14" height="10" rx="3"/><circle cx="9.5" cy="13" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.2" fill="currentColor" stroke="none"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1" fill="currentColor" stroke="none"/>'},
-  {id:'practice', label:'Тесты', icon:'<path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>'},
-  {id:'vocab', label:'Blitz', icon:'<path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="currentColor" stroke="none"/>'},
+  {id:'dashboard', label:'Главная', icon:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'},
+  {id:'bank', label:'Банк', icon:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v18h4.5a2.5 2.5 0 0 0 2.5-2.5z"/>', full:'Банк заданий'},
+  {id:'practice', label:'Тесты', icon:'<path d="M9 4h6M8 4H6a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-2"/><path d="M9 12l2 2 4-4"/>', full:'Пробные тесты'},
+  {id:'ai', label:'AI-план', icon:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>'},
+  {id:'vocab', label:'Слова', icon:'<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>', full:'Vocab Blitz'},
 ];
-function iconSvg(d){return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;}
+function iconSvg(d){return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;}
 function renderNav(){
   const side = document.getElementById('sidebar');
-  const bottom = document.getElementById('bottombav') || document.getElementById('bottomnav');
-  side.innerHTML = `<div class="brand">1609<span>IELTS</span></div>` +
-    NAV.map(n=>`<div class="nav-item" data-tab="${n.id}" onclick="switchTab('${n.id}')">${iconSvg(n.icon)}<span>${n.label}</span></div>`).join('') +
-    `<div class="sidebar-foot">Прототип v0.1 · демо-данные</div>`;
+  const bottom = document.getElementById('bottomnav');
+  side.innerHTML = `<div class="brand"><b>1609</b><span>IELTS</span></div>` +
+    NAV.map((n,i)=>`<div class="nav-item" data-tab="${n.id}" onclick="switchTab('${n.id}')"><span class="n">0${i+1}</span><span>${n.full||n.label}</span></div>`).join('') +
+    `<div class="sidebar-foot">
+       <div class="who"><div class="avatar">А</div><div>Айгерим<small>Цель · 7.5 Band</small></div></div>
+       <div class="eyebrow">Прототип v0.2</div>
+     </div>`;
   bottom.innerHTML = NAV.map(n=>`<div class="nav-item" data-tab="${n.id}" onclick="switchTab('${n.id}')">${iconSvg(n.icon)}<span>${n.label}</span></div>`).join('');
 }
 function switchTab(tab){
@@ -443,15 +607,14 @@ function switchTab(tab){
   window.scrollTo({top:0,behavior:'instant'});
 }
 function goToFullTest(){ switchTab('practice'); startQuiz('full', null); }
-
 /* ---------- HEATMAP ---------- */
 const heat = [2,3,1,4,0,3,2];
-const days = ['П','В','С','Ч','П','С','В'];
+const days = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 document.getElementById('heatmap').innerHTML = heat.map((v,i)=>{
-  const alpha = 0.12 + v*0.2;
-  return `<div class="heat-cell" style="background:rgba(79,70,229,${alpha})">${days[i]}</div>`;
+  const bg = v===0 ? 'var(--paper-2)' : `rgba(237,232,220,${0.12 + v*0.2})`;
+  const fg = v>=2 ? 'var(--paper)' : 'var(--muted)';
+  return `<div class="heat-cell" style="background:${bg};color:${fg}">${days[i]}</div>`;
 }).join('');
-
 /* ---------- QUESTION POOL ---------- */
 const POOL = [
   {id:1, type:'tfng', text:'Vertical farming requires more land than traditional farming methods.', options:['True','False','Not Given'], correct:1},
@@ -464,7 +627,6 @@ const POOL = [
   {id:8, type:'mc', text:'Which country is used as an example of vertical farming in the passage?', options:['Japan','Netherlands','Singapore','United States'], correct:2},
 ];
 const TYPE_LABEL = {tfng:'True / False / Not Given', mc:'Multiple Choice'};
-
 /* ---------- QUESTION BANK RENDER ---------- */
 const BANK_META = [
   {type:'tfng', accuracy:42, total:'510+ в полной версии'},
@@ -477,29 +639,30 @@ function renderBank(){
     const good = b.accuracy>=60;
     return `<div class="card type-card">
       <div class="top">
-        <div><h3>${TYPE_LABEL[b.type]}</h3><div class="meta">${count} вопроса в демо · ${b.total}</div></div>
-        <div style="text-align:right;"><div style="font-family:var(--font-display);font-weight:800;font-size:17px;">${b.accuracy}%</div><div class="meta">точность</div></div>
+        <div><div class="t-tags" style="margin-bottom:10px;"><span class="tag">Reading</span>${good?'':'<span class="tag accent">Слабое место</span>'}</div>
+          <h3>${TYPE_LABEL[b.type]}</h3><div class="meta">${count} вопроса в демо · ${b.total}</div></div>
+        <div class="acc"><div class="v ${good?'':'low'}">${b.accuracy}%</div><div class="eyebrow">точность</div></div>
       </div>
       <div class="acc-bar"><span class="${good?'good':''}" style="width:${b.accuracy}%"></span></div>
-      <button class="btn btn-primary wide" onclick="startQuiz('bank','${b.type}')">Тренировать</button>
+      <button class="btn btn-primary wide" onclick="startQuiz('bank','${b.type}')">Тренировать →</button>
     </div>`;
   }).join('') + `
-    <div class="card type-card" style="opacity:.55;">
-      <div class="top"><div><h3>Matching Headings</h3><div class="meta">Reading</div></div><span class="soon-tag">Скоро</span></div>
+    <div class="card type-card soon">
+      <div class="top"><div><div class="t-tags" style="margin-bottom:10px;"><span class="tag">Reading</span></div><h3>Matching Headings</h3></div><span class="soon-tag">Скоро</span></div>
       <div class="acc-bar"><span style="width:0%"></span></div>
       <button class="btn btn-disabled wide" disabled>Тренировать</button>
     </div>
-    <div class="card type-card" style="opacity:.55;">
-      <div class="top"><div><h3>Form Completion</h3><div class="meta">Listening</div></div><span class="soon-tag">Скоро</span></div>
+    <div class="card type-card soon">
+      <div class="top"><div><div class="t-tags" style="margin-bottom:10px;"><span class="tag">Listening</span></div><h3>Form Completion</h3></div><span class="soon-tag">Скоро</span></div>
       <div class="acc-bar"><span style="width:0%"></span></div>
       <button class="btn btn-disabled wide" disabled>Тренировать</button>
     </div>`;
 }
-
 /* ---------- QUIZ ENGINE ---------- */
 /* Engine is unchanged in behaviour. Small additive hooks for Supabase tests:
-   - optional 3rd arg `custom` ({questions,duration,title,heading,passageHtml})
-   - questions flagged `locked` are rendered as read-only text and excluded from scoring */
+   - optional 3rd arg `custom` ({questions,duration,title,heading,parts})
+   - questions flagged `locked` are rendered as read-only text and excluded from scoring
+   - UI-only hooks: body.in-quiz (fullscreen on phones), Text/Questions pane switch */
 const DEMO_PASSAGE_HTML = document.getElementById('passage-box').innerHTML;
 let quiz = null; // {questions, answers, timeLeft, timerId}
 function startQuiz(mode, filterType, custom){
@@ -512,6 +675,8 @@ function startQuiz(mode, filterType, custom){
   document.getElementById('practice-list').classList.add('hidden');
   document.getElementById('practice-results').classList.add('hidden');
   document.getElementById('practice-quiz').classList.remove('hidden');
+  document.body.classList.add('in-quiz');
+  setPane('text');
   renderPartTabs();
   renderQuizQuestions();
   updateTimerDisplay();
@@ -528,9 +693,24 @@ function updateTimerDisplay(){
   t.textContent = `${m}:${s.toString().padStart(2,'0')}`;
   t.classList.toggle('low', quiz.timeLeft<60);
 }
+/* Mobile: one pane at a time (Text / Questions); desktop shows both side by side */
+function setPane(p){
+  document.getElementById('quiz-layout').dataset.pane = p;
+  document.getElementById('pane-btn-text').classList.toggle('active', p==='text');
+  document.getElementById('pane-btn-questions').classList.toggle('active', p==='questions');
+}
+function updateCounts(){
+  if(!quiz) return;
+  const cur = (quiz.parts ? quiz.questions.filter(q=>q.partNumber===quiz.part) : quiz.questions).filter(q=>!q.locked);
+  const all = quiz.questions.filter(q=>!q.locked);
+  const done = arr => arr.filter(q=>quiz.answers[q.id]!==undefined).length;
+  document.getElementById('pane-count').textContent = `${done(cur)}/${cur.length}`;
+  document.getElementById('progress-note').textContent = `Отвечено ${done(all)} из ${all.length}`;
+}
 /* Part tabs (only for Supabase tests): each tab = one passage + its questions, independent scroll */
 function renderPartTabs(){
   const el = document.getElementById('part-tabs');
+  updateCounts();
   if(!quiz.parts){ el.classList.add('hidden'); el.innerHTML=''; return; }
   el.classList.remove('hidden');
   el.innerHTML = quiz.parts.map(p=>{
@@ -558,7 +738,7 @@ function renderQuizQuestions(){
     const num = q.number!==undefined ? q.number : i+1;
     if(q.locked){
       return pre + `<div class="q-block">
-        <div class="q-num">ВОПРОС ${num} · ${q.typeLabel}</div>
+        <div class="q-num"><span class="q-n">${num}</span>${q.typeLabel}</div>
         ${q.extraHtml||''}
         ${q.text?`<div class="q-text">${q.text}</div>`:''}
         <span class="locked-tag">Интерактивный режим скоро</span>
@@ -566,12 +746,12 @@ function renderQuizQuestions(){
     }
     return pre + `
     <div class="q-block">
-      <div class="q-num">ВОПРОС ${num} · ${q.typeLabel||TYPE_LABEL[q.type]}</div>
+      <div class="q-num"><span class="q-n">${num}</span>${q.typeLabel||TYPE_LABEL[q.type]}</div>
       <div class="q-text">${q.text}</div>
       ${q.options.map((opt,oi)=>`
         <label class="opt ${quiz.answers[q.id]===oi?'selected':''}" id="opt-${q.id}-${oi}">
           <input type="radio" name="q-${q.id}" value="${oi}" ${quiz.answers[q.id]===oi?'checked':''} onchange="selectAnswer(${q.id},${oi})">
-          ${opt}
+          <span>${opt}</span>
         </label>`).join('')}
     </div>`;
   }).join('');
@@ -580,11 +760,12 @@ function selectAnswer(qid, oi){
   quiz.answers[qid]=oi;
   document.querySelectorAll(`[id^="opt-${qid}-"]`).forEach(el=>el.classList.remove('selected'));
   document.getElementById(`opt-${qid}-${oi}`).classList.add('selected');
-  if(quiz.parts) renderPartTabs();
+  if(quiz.parts) renderPartTabs(); else updateCounts();
 }
 function exitQuiz(){
   if(quiz && quiz.timerId) clearInterval(quiz.timerId);
   quiz=null;
+  document.body.classList.remove('in-quiz');
   document.getElementById('practice-quiz').classList.add('hidden');
   document.getElementById('practice-results').classList.add('hidden');
   document.getElementById('practice-list').classList.remove('hidden');
@@ -600,6 +781,7 @@ function bandFromPercent(pct){
 }
 function submitQuiz(){
   if(quiz.timerId) clearInterval(quiz.timerId);
+  document.body.classList.remove('in-quiz');
   const gradable = quiz.questions.filter(q=>!q.locked);
   const total = gradable.length;
   let correct = 0;
@@ -623,22 +805,22 @@ function submitQuiz(){
   const feedback = pct>=70
     ? 'Хороший результат — уверенно держите Reading, можно добавить больше Writing-практики.'
     : 'Основная просадка — задания True/False/Not Given: перечитывайте формулировку внимательно, «Not Given» отличается от «False».';
-
   document.getElementById('practice-quiz').classList.add('hidden');
   const res = document.getElementById('practice-results');
   res.classList.remove('hidden');
   res.innerHTML = `
+    <div class="page-head" style="margin-bottom:18px;"><div class="eyebrow">Результат</div></div>
     <div class="card results-hero">
       <div class="band-num">${band.toFixed(1)}</div>
-      <div class="band-lbl">оценочный Band Score · ${correct} из ${total} верно (${pct}%)${skipped?` · ещё ${skipped} вопр. скоро в интерактивном режиме`:''}</div>
+      <div class="band-lbl"><span class="eyebrow">Оценочный Band Score</span><b>${correct} из ${total} верно · ${pct}%</b>${skipped?`Ещё ${skipped} вопр. появятся в интерактивном режиме позже.`:''}</div>
     </div>
-    <div class="ai-note" style="margin-top:16px;"><div>🤖</div><div>${feedback}</div></div>
-    <div class="card" style="margin-top:14px;">${rows}</div>
-    <div style="display:flex;justify-content:center;margin-top:16px;">
-      <button class="btn btn-primary" onclick="exitQuiz()">Назад к тестам</button>
+    <div class="ai-note" style="margin-top:16px;"><div class="ai-mark">AI</div><div>${feedback}</div></div>
+    <div class="card" style="margin-top:14px;padding-top:8px;padding-bottom:8px;">${rows}</div>
+    <div style="display:flex;justify-content:center;margin-top:20px;">
+      <button class="btn btn-primary" onclick="exitQuiz()">← Назад к тестам</button>
     </div>`;
+  window.scrollTo({top:0,behavior:'instant'});
 }
-
 /* ---------- PRACTICE: SUPABASE DATA LAYER ---------- */
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const DB_TYPE_LABEL = {
@@ -651,31 +833,35 @@ const DB_TYPE_LABEL = {
 };
 const MODULE_LABEL = {reading:'Reading', listening:'Listening', writing:'Writing', speaking:'Speaking'};
 const parseJson = v => { if(typeof v==='string'){ try{ return JSON.parse(v); }catch(e){ return v; } } return v; };
-
 async function loadTests(){
   const box = document.getElementById('db-tests');
-  box.innerHTML = `<div class="card state-msg">Загружаем тесты…</div>`;
+  box.innerHTML = `<div class="skel"></div>`;
   try{
     const { data, error } = await sb.from('tests').select('*').order('created_at',{ascending:true});
     if(error) throw error;
-    if(!data || !data.length){ box.innerHTML = `<div class="card state-msg">Тестов пока нет.</div>`; return; }
-    box.innerHTML = data.map(t=>`
-      <div class="card test-card">
+    if(!data || !data.length){ box.innerHTML = `<div class="state-msg">Тестов пока нет.</div>`; return; }
+    box.innerHTML = data.map((t,i)=>`
+      <div class="test-card">
+        <div class="t-idx">${String(i+1).padStart(2,'0')}</div>
         <div class="info">
+          <div class="t-tags">
+            <span class="tag">${MODULE_LABEL[t.module]||esc(t.module)}</span>
+            <span class="tag">${esc(t.test_type||'academic')}</span>
+            <span class="tag">${t.duration_minutes||60} мин</span>
+          </div>
           <h3>${esc(t.title)}</h3>
-          <div class="meta">${MODULE_LABEL[t.module]||esc(t.module)} · ${esc(t.test_type||'academic')} · ${t.duration_minutes||60} минут${t.source_note?` · ${esc(t.source_note)}`:''}</div>
+          ${t.source_note?`<div class="meta">${esc(t.source_note)}</div>`:''}
         </div>
         <div class="actions">
-          <button class="btn btn-primary" data-test="${esc(t.id)}" onclick="takeDbTest('${esc(t.id)}', this)">Take Test</button>
+          <button class="btn btn-primary" data-test="${esc(t.id)}" onclick="takeDbTest('${esc(t.id)}', this)">Take Test →</button>
         </div>
       </div>`).join('');
     window.__tests = Object.fromEntries(data.map(t=>[t.id,t]));
   }catch(e){
     console.error(e);
-    box.innerHTML = `<div class="card state-msg err">Не удалось загрузить тесты: ${esc(e.message||e)}<br><button class="btn btn-ghost" style="margin-top:10px" onclick="loadTests()">Повторить</button></div>`;
+    box.innerHTML = `<div class="state-msg err">Не удалось загрузить тесты: ${esc(e.message||e)}<br><button class="btn btn-ghost" style="margin-top:12px" onclick="loadTests()">Повторить</button></div>`;
   }
 }
-
 /* Normalise options (array of strings / objects, or {A:..}) to [{key,text}] */
 function normOptions(raw){
   raw = parseJson(raw);
@@ -703,7 +889,6 @@ function tfngIndex(ans){
   if(a==='NOT GIVEN'||a==='NG'||a==='NOTGIVEN') return 2;
   return -1;
 }
-
 function groupExtraHtml(g){
   let html = '';
   const tpl = parseJson(g.template);
@@ -716,8 +901,7 @@ function groupExtraHtml(g){
   }
   return html;
 }
-
-/* Build engine-compatible question list + passage HTML from nested rows */
+/* Build engine-compatible question list + per-part passage HTML from nested rows */
 function buildQuizFromParts(test, parts){
   const questions = [];
   const partsOut = [];
@@ -749,7 +933,7 @@ function buildQuizFromParts(test, parts){
             typeLabel: DB_TYPE_LABEL[isSelect?'multiple_select':g.question_type] || esc(g.question_type)
           };
           if(!partHeadDone){
-            base.partHeadHtml = `<div class="part-head"><h4>Part ${part.part_number}</h4>${part.instructions?`<p>${esc(part.instructions)}</p>`:''}</div>`;
+            if(part.instructions) base.partHeadHtml = `<div class="part-head"><h4>Part ${part.part_number}</h4><p>${esc(part.instructions)}</p></div>`;
             partHeadDone = true;
           }
           if(first){
@@ -788,7 +972,6 @@ function buildQuizFromParts(test, parts){
     heading: test.title
   };
 }
-
 async function takeDbTest(testId, btn){
   const test = (window.__tests||{})[testId];
   const old = btn.textContent;
@@ -810,7 +993,6 @@ async function takeDbTest(testId, btn){
     btn.disabled = false; btn.textContent = old;
   }
 }
-
 /* ---------- VOCAB FLASHCARDS ---------- */
 const VOCAB = [
   {word:'arable', pos:'прил.', def:'suitable for growing crops', ru:'пригодный для земледелия', ex:'The region has very little arable land.'},
@@ -836,9 +1018,9 @@ function renderCard(){
 function flipCard(){ document.getElementById('flashcard-inner').classList.toggle('flipped'); }
 function nextCard(){ vocabIndex = (vocabIndex+1)%VOCAB.length; renderCard(); }
 function prevCard(){ vocabIndex = (vocabIndex-1+VOCAB.length)%VOCAB.length; renderCard(); }
-
 /* ---------- INIT ---------- */
 renderNav();
+switchTab('dashboard');
 renderBank();
 renderCard();
 loadTests();
